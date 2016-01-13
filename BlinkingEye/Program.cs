@@ -81,6 +81,8 @@ namespace BlinkingEye
             }
 
             // TODO Proceed with many other things
+            Console.WriteLine("Press Enter to terminate this server...");
+            Console.ReadLine();
         }
     }
 }
