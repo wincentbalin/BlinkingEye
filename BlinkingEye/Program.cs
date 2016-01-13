@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Windows.Forms;
 using System.Windows.Media.Imaging;
@@ -11,6 +12,7 @@ namespace BlinkingEye
 {
     class Program
     {
+        private static HttpListener server;
         private Rectangle primaryScreenBounds;
         private Bitmap previousScreenShot;
 
@@ -51,7 +53,6 @@ namespace BlinkingEye
             // Get settings
             string address = "0.0.0.0";
             int port = 3130;
-            string password;
 
             //Console.WriteLine("We have {0} arguments", args.Length);
 
@@ -81,7 +82,11 @@ namespace BlinkingEye
                     break;
             }
 
-            Console.WriteLine("Starting server listening on http://{0}:{1}/{2}/", address, port, password);
+            String serverPrefix = String.Format("http://{0}:{1}/{2}/", address, port, password);
+            Console.WriteLine("Starting server listening on {0}", serverPrefix);
+            server = new HttpListener();
+            server.Prefixes.Add(serverPrefix);
+
 
             // TODO Proceed with many other things
             Console.WriteLine("Press Enter to terminate this server...");
