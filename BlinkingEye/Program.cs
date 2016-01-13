@@ -80,6 +80,8 @@ namespace BlinkingEye
                     break;
             }
 
+            Console.WriteLine("Starting server listening on http://{0}:{1}/{2}/", address, port, password);
+
             // TODO Proceed with many other things
             Console.WriteLine("Press Enter to terminate this server...");
             Console.ReadLine();
