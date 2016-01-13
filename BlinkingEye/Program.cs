@@ -53,6 +53,7 @@ namespace BlinkingEye
             // Get settings
             string address = "0.0.0.0";
             int port = 3130;
+            string password = "";
 
             //Console.WriteLine("We have {0} arguments", args.Length);
 
