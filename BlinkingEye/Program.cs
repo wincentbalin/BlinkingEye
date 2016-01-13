@@ -21,6 +21,13 @@ namespace BlinkingEye
             primaryScreenBounds = Screen.PrimaryScreen.Bounds;
         }
 
+        private static void ContextReceivedCallback(IAsyncResult asyncResult)
+        {
+            HttpListenerContext context = server.EndGetContext(asyncResult);
+
+
+        }
+
         void createPngDiff()
         {
             // Copy screen contents to bitmap
@@ -85,9 +92,10 @@ namespace BlinkingEye
 
             String serverPrefix = String.Format("http://{0}:{1}/{2}/", address, port, password);
             Console.WriteLine("Starting server listening on {0}", serverPrefix);
+
             server = new HttpListener();
             server.Prefixes.Add(serverPrefix);
-
+            server.Start();
 
             // TODO Proceed with many other things
             Console.WriteLine("Press Enter to terminate this server...");
