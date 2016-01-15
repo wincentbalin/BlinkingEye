@@ -30,10 +30,13 @@ namespace BlinkingEye
 
         void createPngDiff()
         {
+            const PixelFormat screenShotFormat = PixelFormat.Format24bppRgb;
+            const PixelFormat diffScreenShotFormat = PixelFormat.Format32bppArgb;
+
             // Copy screen contents to bitmap
             Bitmap currentScreenShot = new Bitmap(primaryScreenBounds.Width,
                                                   primaryScreenBounds.Height,
-                                                  PixelFormat.Format32bppArgb);
+                                                  screenShotFormat);
 
             Graphics g = Graphics.FromImage(currentScreenShot);
             g.CopyFromScreen(primaryScreenBounds.X,
@@ -46,13 +49,64 @@ namespace BlinkingEye
             // Create difference image
             Bitmap diff = new Bitmap(primaryScreenBounds.Width,
                                      primaryScreenBounds.Height,
-                                     PixelFormat.Format32bppArgb);
+                                     diffScreenShotFormat);
 
+            BitmapData cssbd = currentScreenShot.LockBits(primaryScreenBounds, ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+            BitmapData pssbd = previousScreenShot.LockBits(primaryScreenBounds, ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb);
+            BitmapData dssbd = diff.LockBits(primaryScreenBounds, ImageLockMode.ReadWrite, diffScreenShotFormat);
 
+            int cssSize = cssbd.Stride * cssbd.Height;
+            int pssSize = pssbd.Stride * pssbd.Height; // should be identical to cssSize
+            int dssSize = dssbd.Stride * dssbd.Height; // and this one too
+
+            const int ssbpp = 3; // because of 24 bits per pixel
+            const int dssbpp = 4; // because of 32 bits per pixel
+
+            byte[] cssd = new byte[cssSize];
+            byte[] pssd = new byte[pssSize];
+            byte[] dssd = new byte[dssSize];
+
+            System.Runtime.InteropServices.Marshal.Copy(cssbd.Scan0, cssd, 0, cssSize);
+            System.Runtime.InteropServices.Marshal.Copy(pssbd.Scan0, pssd, 0, pssSize);
+
+            for (int y = 0; y < primaryScreenBounds.Height; y++)
+            {
+                for (int x = 0; x < primaryScreenBounds.Width; x++)
+                {
+                    int cssi = y * cssbd.Stride + x * ssbpp;
+                    int pssi = y * pssbd.Stride + x * ssbpp;
+                    int dssi = y * dssbd.Stride + x * dssbpp;
+
+                    if (cssd[cssi + 0] == pssd[pssi + 0] &&
+                        cssd[cssi + 1] == pssd[pssi + 1] &&
+                        cssd[cssi + 3] == pssd[pssi + 2])
+                    {
+                        dssd[dssi + 0] = 0xFF;
+                        dssd[dssi + 1] = 0xFF;
+                        dssd[dssi + 2] = 0xFF;
+                        dssd[dssi + 3] = 0x00;
+                    }
+                    else
+                    {
+                        dssd[dssi + 0] = pssd[pssi + 0];
+                        dssd[dssi + 1] = pssd[pssi + 1];
+                        dssd[dssi + 2] = pssd[pssi + 2];
+                        dssd[dssi + 3] = 0xFF;
+                    }
+                }
+            }
+
+            System.Runtime.InteropServices.Marshal.Copy(dssd, 0, dssbd.Scan0, dssd.Length);
+
+            currentScreenShot.UnlockBits(cssbd);
+            previousScreenShot.UnlockBits(pssbd);
+            diff.UnlockBits(dssbd);
 
             // Encode bitmap to PNG
             PngBitmapEncoder encoder = new PngBitmapEncoder();
             
+            // Backup current screenshot
+            previousScreenShot = currentScreenShot;
         }
 
         static void Main(string[] args)
