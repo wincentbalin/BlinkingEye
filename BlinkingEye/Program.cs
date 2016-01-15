@@ -23,9 +23,15 @@ namespace BlinkingEye
 
         private static void ContextReceivedCallback(IAsyncResult asyncResult)
         {
+            // Get HTTP listener context
             HttpListenerContext context = server.EndGetContext(asyncResult);
 
+            // Start new thread for incoming requests
+            server.BeginGetContext(new AsyncCallback(ContextReceivedCallback), null);
 
+            Console.WriteLine("Request for: {0}", context.Request.Url.LocalPath);
+
+            // TODO: Process request
         }
 
         void createPngDiff()
@@ -112,7 +118,7 @@ namespace BlinkingEye
         static void Main(string[] args)
         {
             // Get settings
-            string address = "0.0.0.0";
+            string address = "*";
             int port = 3130;
             string password = "";
 
@@ -150,6 +156,7 @@ namespace BlinkingEye
             server = new HttpListener();
             server.Prefixes.Add(serverPrefix);
             server.Start();
+            server.BeginGetContext(new AsyncCallback(ContextReceivedCallback), null);
 
             // TODO Proceed with many other things
             Console.WriteLine("Press Enter to terminate this server...");
