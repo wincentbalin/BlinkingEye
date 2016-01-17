@@ -1,0 +1,62 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <title>Blinking Eye</title>
+    <script src="jquery-1.12.0.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      $(document).ready(function()
+      {
+        //setTimeout(function() { alert("xxx"); }, 2000);
+        var screen = document.getElementById('screen'),
+            context = screen.getContext('2d'),
+            ctr = 0,
+            initial = true,
+            failSafeTimerId;
+            
+        var loadImage = function(diff, callback)
+        {
+          diff = diff || false;
+          var image = new Image();
+          image.src = document.location + (diff ? 'screen-diff.png' : 'screen.png') + '?ctr=' + ctr;
+          image.onload = function()
+          {
+            ctr++;
+            clearTimeout(failSafeTimerId);
+            context.drawImage(image, 0, 0);
+            callback();
+          };
+        };
+        
+        var restartLoading = function()
+        {
+          ctr++;
+          initial = true;
+          reloadImage();
+        };
+        
+        var reloadImage = function()
+        {
+          var delay = 2000, // ms
+              failSafeDelay = 5000; // ms
+          
+          if (initial)
+          {
+            loadImage(false, reloadImage);
+            initial = false;
+          }
+          else
+          {
+            setTimeout(function() { loadImage(true, reloadImage); } , delay);
+          }
+          
+          failSafeTimerId = setTimeout(restartLoading, failSafeDelay);
+        };
+        
+        reloadImage();
+      });
+    </script>
+  </head>
+  <body>
+    <canvas id="screen" width="640" height="480"></canvas>
+  </body>
+</html>
