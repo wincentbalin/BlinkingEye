@@ -195,7 +195,7 @@ namespace BlinkingEye
 
                     if (cssd[cssi + 0] == pssd[pssi + 0] &&
                         cssd[cssi + 1] == pssd[pssi + 1] &&
-                        cssd[cssi + 3] == pssd[pssi + 2]) // Transparent pixels
+                        cssd[cssi + 2] == pssd[pssi + 2]) // Transparent pixels
                     {
                         dssd[dssi + 0] = 0xFF;
                         dssd[dssi + 1] = 0xFF;
