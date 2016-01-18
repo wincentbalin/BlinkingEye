@@ -264,7 +264,7 @@ namespace BlinkingEye
             {
                 case 3:
                     address = args[args.Length - 3];
-                    port = Convert.ToInt32(args[args.Length - 2]);
+                    port = Convert.ToInt16(args[args.Length - 2]);
                     password = args[args.Length - 1];
                     break;
 
