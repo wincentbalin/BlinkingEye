@@ -57,6 +57,8 @@ namespace BlinkingEye
                         bytes = GetScreen();
                     else if (fileName == "screen-diff.png")
                         bytes = GetScreenDiff();
+                    else if (fileName == "screen-size.json")
+                        bytes = GetScreenSize();
                     else
                         bytes = GetResource(fileName);
 
@@ -108,6 +110,8 @@ namespace BlinkingEye
                 return "text/css";
             else if (fn.EndsWith(".js"))
                 return "text/javascript";
+            else if (fn.EndsWith(".json"))
+                return "application/json";
             else if (fn.EndsWith(".png"))
                 return "image/png";
             else
@@ -222,6 +226,7 @@ namespace BlinkingEye
             byte[] result = null;
             using (MemoryStream stream = new MemoryStream())
             {
+                PngBitmapEncoder encoder = new PngBitmapEncoder();
                 diff.Save(stream, ImageFormat.Png);
                 result = stream.ToArray();
             }
@@ -232,6 +237,13 @@ namespace BlinkingEye
             previousScreenShot = currentScreenShot;
 
             return result;
+        }
+
+        private static byte[] GetScreenSize()
+        {
+            string contents = "{ \"width\": " + primaryScreenBounds.Width + ", " +
+                               "\"height\": " + primaryScreenBounds.Height + " }";
+            return Encoding.UTF8.GetBytes(contents);
         }
 
         private static void WriteError(HttpListenerContext context, HttpStatusCode statusCode, string message)

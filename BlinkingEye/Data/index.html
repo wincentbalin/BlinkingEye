@@ -13,6 +13,14 @@
             initial = true,
             failSafeTimerId;
             
+        console.log("screen: width " + screen.width + ", height " + screen.height);
+        
+        $.get("screen-size.json", function(data)
+        {
+          screen.width = data.width;
+          screen.height = data.height;
+        });
+            
         var loadImage = function(diff, callback)
         {
           diff = diff || false;
@@ -57,6 +65,6 @@
     </script>
   </head>
   <body>
-    <canvas id="screen" width="640" height="480"></canvas>
+    <canvas id="screen"></canvas>
   </body>
 </html>
