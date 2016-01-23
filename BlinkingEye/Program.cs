@@ -13,6 +13,54 @@ using System.Windows.Media.Imaging;
 
 namespace BlinkingEye
 {
+    static class PngOptimizerDll
+    {
+        public enum POChunkOption : uint
+        {
+            Remove,
+            Keep,
+            Force
+        };
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        public struct POSettings
+        {
+            public bool BackupOldPngFiles;
+            public bool KeepInterlacing;
+            public bool IE6Compatible;
+            public bool SkipAnimatedGifs;
+            public bool KeepFileDate;
+
+            public POChunkOption BkgdOption;
+            public int BkgdColor;      // Forced color
+
+            public POChunkOption TextOption;
+            public string TextKeyword; // Forced text keyword
+            public string TextData;    // Forced text data
+
+            public POChunkOption PhysOption;
+            public uint PhysPpmX;      // Forced Pixels per meter X
+            public uint PhysPpmY;      // Forced Pixels per meter Y
+        };
+
+        [DllImport(@"PngOptimizerDll.dll", EntryPoint = "PO_OptimizeFile")]
+        public static extern bool OptimizeFile([MarshalAs(UnmanagedType.LPWStr)]string filePath);
+
+        [DllImport(@"PngOptimizerDll.dll", EntryPoint = "PO_OptimizeFileMem")]
+        public static extern bool OptimizeFileMem(byte [] image, int imageSize,
+                                                  [Out] byte[] result, int resultCapacity, out int resultSize);
+
+        [DllImport(@"PngOptimizerDll.dll", EntryPoint = "PO_GetLastErrorString")]
+        [return: MarshalAs(UnmanagedType.LPWStr)]
+        public static extern string GetLastErrorString();
+
+        [DllImport(@"PngOptimizerDll.dll", EntryPoint = "PO_GetSettings")]
+        public static extern bool GetSettings(out POSettings settings);
+
+        [DllImport(@"PngOptimizerDll.dll", EntryPoint = "PO_SetSettings")]
+        public static extern bool SetSettings(POSettings settings);
+    }
+
     class Program
     {
         private static HttpListener server;
