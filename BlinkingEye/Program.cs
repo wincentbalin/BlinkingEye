@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using System.Windows.Media.Imaging;
@@ -25,6 +26,8 @@ namespace BlinkingEye
         private static Rectangle primaryScreenBounds = Screen.PrimaryScreen.Bounds;
         private static Bitmap previousScreenShot = null;
         private static PixelFormat screenShotFormat = PixelFormat.Format24bppRgb;
+
+        private static bool optimizerPresent;
 
         public Program()
         {
@@ -146,7 +149,10 @@ namespace BlinkingEye
                 previousScreenShot.Dispose();
             previousScreenShot = currentScreenShot;
 
-            return result;
+            if (optimizerPresent)
+                return OptimizePNGByteArray(result);
+            else
+                return result;
         }
 
         private static byte[] GetScreenDiff()
@@ -186,8 +192,8 @@ namespace BlinkingEye
             byte[] pssd = new byte[pssSize];
             byte[] dssd = new byte[dssSize];
 
-            System.Runtime.InteropServices.Marshal.Copy(cssbd.Scan0, cssd, 0, cssSize);
-            System.Runtime.InteropServices.Marshal.Copy(pssbd.Scan0, pssd, 0, pssSize);
+            Marshal.Copy(cssbd.Scan0, cssd, 0, cssSize);
+            Marshal.Copy(pssbd.Scan0, pssd, 0, pssSize);
 
             for (int y = 0; y < primaryScreenBounds.Height; y++)
             {
@@ -216,7 +222,7 @@ namespace BlinkingEye
                 }
             }
 
-            System.Runtime.InteropServices.Marshal.Copy(dssd, 0, dssbd.Scan0, dssd.Length);
+            Marshal.Copy(dssd, 0, dssbd.Scan0, dssd.Length);
 
             currentScreenShot.UnlockBits(cssbd);
             previousScreenShot.UnlockBits(pssbd);
@@ -236,7 +242,10 @@ namespace BlinkingEye
                 previousScreenShot.Dispose();
             previousScreenShot = currentScreenShot;
 
-            return result;
+            if (optimizerPresent)
+                return OptimizePNGByteArray(result);
+            else
+                return result;
         }
 
         private static byte[] GetScreenSize()
@@ -258,6 +267,35 @@ namespace BlinkingEye
                 context.Response.Close();
             }
             catch { } // Ignore all errors
+        }
+
+        private static void TestPresenceOfPNGOptimizer()
+        {
+            try
+            {
+                string lastError = PngOptimizerDll.GetLastErrorString();
+                optimizerPresent = true;
+            }
+            catch (DllNotFoundException)
+            {
+                optimizerPresent = false;
+            }
+        }
+
+        private static byte[] OptimizePNGByteArray(byte[] input)
+        {
+            byte[] result = new byte[input.Length + 400000]; // As seen in the test app for PNG optimizer DLL
+            int resultSize = 0;
+            bool optimized = PngOptimizerDll.OptimizeFileMem(input, input.Length, result, result.Length, out resultSize);
+
+            if (optimized && resultSize < input.Length)
+            {
+                byte[] optimizedPNG = new byte[resultSize];
+                Array.Copy(result, optimizedPNG, resultSize);    
+                return optimizedPNG;
+            }
+            else
+                return input;
         }
 
         static void Main(string[] args)
@@ -297,6 +335,8 @@ namespace BlinkingEye
                     Environment.Exit(1);
                     break;
             }
+
+            TestPresenceOfPNGOptimizer();
 
             parentPath = "/" + password + "/";
             string serverPrefix = String.Format("http://{0}:{1}/{2}/", address, port, password);
