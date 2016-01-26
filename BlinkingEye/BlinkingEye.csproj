@@ -95,7 +95,9 @@
     <EmbeddedResource Include="Data\jquery-1.12.0.min.js" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Data\index.html" />
+    <EmbeddedResource Include="Data\index.html">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

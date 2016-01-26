@@ -12,8 +12,6 @@
             ctr = 0,
             initial = true,
             failSafeTimerId;
-            
-        console.log("screen: width " + screen.width + ", height " + screen.height);
         
         $.get("screen-size.json", function(data)
         {
@@ -44,8 +42,8 @@
         
         var reloadImage = function()
         {
-          var delay = 2000, // ms
-              failSafeDelay = 5000; // ms
+          var delay = 2000, // All delays in milliseconds
+              failSafeDelay = 60000;
           
           if (initial)
           {
@@ -54,7 +52,7 @@
           }
           else
           {
-            setTimeout(function() { loadImage(true, reloadImage); } , delay);
+            setTimeout(function() { loadImage(true, reloadImage); }, delay);
           }
           
           failSafeTimerId = setTimeout(restartLoading, failSafeDelay);
