@@ -115,6 +115,7 @@ namespace BlinkingEye
 
                     if (bytes != null)
                     {
+                        context.Response.AddHeader("Cache-Control", "no-cache, no-store, must-revalidate");
                         context.Response.ContentType = GetContentType(fileName);
                         context.Response.OutputStream.Write(bytes, 0, bytes.Length);
                         context.Response.OutputStream.Close();

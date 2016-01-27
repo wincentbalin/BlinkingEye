@@ -13,11 +13,7 @@
             initial = true,
             failSafeTimerId;
         
-        $.get("screen-size.json", function(data)
-        {
-          screen.width = data.width;
-          screen.height = data.height;
-        });
+        $.get("screen-size.json", function(data) { $.extend(screen, data); });
             
         var loadImage = function(diff, callback)
         {
