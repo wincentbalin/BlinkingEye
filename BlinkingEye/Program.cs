@@ -128,6 +128,35 @@ namespace BlinkingEye
             }
             else if (context.Request.HttpMethod == "POST") // Input
             {
+                Console.WriteLine("Got a POST!");
+
+                // Here mostly from http://stackoverflow.com/questions/5197579/getting-form-data-from-httplistenerrequest
+                if (context.Request.HasEntityBody)
+                {
+                    string postData;
+                    using (Stream body = context.Request.InputStream)
+                        using (StreamReader reader = new StreamReader(body, context.Request.ContentEncoding))
+                            postData = reader.ReadToEnd();
+
+                    // Here mostly from http://stackoverflow.com/questions/19031438/parse-post-parameters-from-httplistener
+                    Dictionary<string, string> postParams = new Dictionary<string, string>();
+                    foreach (string postParam in postData.Split('&'))
+                    {
+                        string[] kvPair = postParam.Split('=');
+                        postParams.Add(kvPair[0], WebUtility.HtmlDecode(kvPair[1]));
+                    }
+
+                    if (postParams.ContainsKey("type")) // We have an event
+                    {
+                        string type = postParams["type"];
+
+
+                    }
+                }
+
+                context.Response.AddHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+                context.Response.ContentType = "application/json";
+                context.Response.OutputStream.Close();
             }
         }
 
