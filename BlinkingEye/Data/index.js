@@ -57,12 +57,14 @@
       mouseMovePos = { x: -1, y: -1 },
       mouseMoveLastPos = $.extend({}, mouseMovePos);
        
-  var sendEvent = function(type)
+  var sendEvent = function(type, otherParams)
   {
     console.log("Document's location is " + document.location);
     console.log("Event type is " + type);
+    var params = { type: type };
+    $.extend(params, otherParams);
     $.post(document.location,
-           { type: type },
+           params,
            function(data) { /* Here could be a callback. */ });
   };
         
@@ -76,7 +78,7 @@
               
         if (mouseMovePos.x !== mouseMoveLastPos.x && mouseMovePos.y !== mouseMoveLastPos.y)
         {
-          sendEvent("mousemove");
+          sendEvent("mousemove", mouseMovePos);
           mouseMoveLastPos = $.extend({}, mouseMovePos);
         }
       }, mouseMoveDelay);
@@ -178,7 +180,7 @@
           
     if (mouseIsDown)
     {
-      sendEvent("mousemove");
+      sendEvent("mousemove", mouseMovePos);
     }
     else
     {

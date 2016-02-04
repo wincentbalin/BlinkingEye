@@ -61,6 +61,22 @@ namespace BlinkingEye
         public static extern bool SetSettings(POSettings settings);
     }
 
+    static class Win32
+    {
+        [DllImport("User32.Dll")]
+        public static extern long SetCursorPos(int x, int y);
+
+        [DllImport("User32.Dll")]
+        public static extern bool ClientToScreen(IntPtr hWnd, ref Point point);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct POINT
+        {
+            public int x;
+            public int y;
+        };
+    }
+
     class Program
     {
         private static HttpListener server;
@@ -150,7 +166,11 @@ namespace BlinkingEye
                     {
                         string type = postParams["type"];
 
-
+                        if (type == "mousemove")
+                        {
+                            Win32.POINT p = new Win32.POINT();
+                            Cursor.Position = new Point(Convert.ToInt32(postParams["x"]), Convert.ToInt32(postParams["y"]));
+                        }
                     }
                 }
 
