@@ -168,12 +168,23 @@
     return null;
   };
   */
-        
+  
   $(screen).mousedown(function(event)
   {
 //    console.log("Mouse down; pageX: " + event.pageX + ", pageY: " + event.pageY);
     mouseIsDown = true;
-    sendEvent("mousedown");
+    var params =
+    {
+      which: event.which,
+      altKey: event.altKey,
+      controlKey: event.controlKey,
+      metaKey: event.metaKey,
+      shiftKey: event.shiftKey
+    };
+    $.extend(params, mouseMovePos);
+    sendEvent("mousedown", params);
+    event.preventDefault();
+    event.stopPropagation();
   }).mousemove(function(event)
   {
     mouseMovePos = { 'x': event.pageX, 'y': event.pageY };
@@ -184,13 +195,26 @@
     }
     else
     {
-      restartMouseMoveTimer();
+      // restartMouseMoveTimer();
     }
+    event.preventDefault();
+    event.stopPropagation();
   }).mouseup(function(event)
   {
 //    console.log("Mouse up; pageX: " + event.pageX + ", pageY: " + event.pageY);
     mouseIsDown = false;
-    sendEvent("mouseup");
+    var params =
+    {
+      which: event.which,
+      altKey: event.altKey,
+      controlKey: event.controlKey,
+      metaKey: event.metaKey,
+      shiftKey: event.shiftKey
+    };
+    $.extend(params, mouseMovePos);
+    sendEvent("mouseup", params);
+    event.preventDefault();
+    event.stopPropagation();
   });
         
   /*

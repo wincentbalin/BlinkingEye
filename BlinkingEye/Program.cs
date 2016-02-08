@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
-using System.Windows.Media.Imaging;
+using System.Windows.Media.Imaging; // The only part from WPF is the PNG encoder
 
 namespace BlinkingEye
 {
@@ -63,19 +63,85 @@ namespace BlinkingEye
 
     static class Win32
     {
-        [DllImport("User32.Dll")]
-        public static extern long SetCursorPos(int x, int y);
+        // From http://www.pinvoke.net/default.aspx/user32.mouse_event
+        public const uint MOUSEEVENTF_MOVE = 0x0001;
+        public const uint MOUSEEVENTF_LEFTDOWN = 0x0002;
+        public const uint MOUSEEVENTF_LEFTUP = 0x0004;
+        public const uint MOUSEEVENTF_RIGHTDOWN = 0x0008;
+        public const uint MOUSEEVENTF_RIGHTUP = 0x0010;
+        public const uint MOUSEEVENTF_MIDDLEDOWN = 0x0020;
+        public const uint MOUSEEVENTF_MIDDLEUP = 0x0040;
+        public const uint MOUSEEVENTF_XDOWN = 0x0080;
+        public const uint MOUSEEVENTF_XUP = 0x0100;
+        public const uint MOUSEEVENTF_WHEEL = 0x0800;
+        public const uint MOUSEEVENTF_HWHEEL = 0x1000;
+        public const uint MOUSEEVENTF_ABSOLUTE = 0x8000;
 
-        [DllImport("User32.Dll")]
-        public static extern bool ClientToScreen(IntPtr hWnd, ref Point point);
+        public const uint MOUSEEVENTF_XBUTTON1 = 0x00000001;
+        public const uint MOUSEEVENTF_XBUTTON2 = 0x00000002;
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct POINT
-        {
-            public int x;
-            public int y;
-        };
+        [DllImport("User32.dll")]
+        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
     }
+
+    static class Event
+    {
+        public static void MouseDown(Dictionary<string, string> p)
+        {
+            Console.WriteLine("MouseDown");
+
+            int which = Convert.ToInt32(p["which"]);
+            uint button = 0;
+
+            switch (which)
+            {
+                case 0: return; // No button pressed
+                case 1: button = Win32.MOUSEEVENTF_LEFTDOWN; break;
+                case 2: button = Win32.MOUSEEVENTF_MIDDLEDOWN; break;
+                case 3: button = Win32.MOUSEEVENTF_RIGHTDOWN; break;
+                default: return; // Unknown button
+            };
+
+            Win32.mouse_event(button, 0, 0, 0, UIntPtr.Zero);
+        }
+
+        public static void MouseUp(Dictionary<string, string> p)
+        {
+            Console.WriteLine("MouseUp");
+
+            int which = Convert.ToInt32(p["which"]);
+            uint button = 0;
+
+            switch (which)
+            {
+                case 0: return; // No button released
+                case 1: button = Win32.MOUSEEVENTF_LEFTUP; break;
+                case 2: button = Win32.MOUSEEVENTF_MIDDLEUP; break;
+                case 3: button = Win32.MOUSEEVENTF_RIGHTUP; break;
+                default: return; // Unknown button
+            };
+
+            Win32.mouse_event(button, 0, 0, 0, UIntPtr.Zero);
+        }
+
+        public static void MouseMove(Dictionary<string, string> p)
+        {
+            if (!p.ContainsKey("x") || !p.ContainsKey("y"))
+                return;
+
+            // Some things were taken from https://github.com/T1T4N/NVNC/blob/master/NVNC/Utils/Robot.cs
+            string xs = p["x"];
+            string ys = p["y"];
+            Console.WriteLine("Coords: {0},{1}", xs, ys);
+            Console.WriteLine("Coords: {0},{1}", Convert.ToUInt32(xs), Convert.ToUInt32(ys));
+            Console.WriteLine("Primary screen bounds: {0}", Screen.PrimaryScreen.Bounds);
+            Rectangle primaryScreenBounds = Screen.PrimaryScreen.Bounds;
+            int x = Convert.ToInt32(xs) - primaryScreenBounds.Left;
+            int y = Convert.ToInt32(ys) - primaryScreenBounds.Top;
+            Console.WriteLine("Converted coords: {0},{1}", x, y);
+            Cursor.Position = new Point(x, y);
+        }
+    };
 
     class Program
     {
@@ -166,10 +232,17 @@ namespace BlinkingEye
                     {
                         string type = postParams["type"];
 
-                        if (type == "mousemove")
+                        if (type == "mousedown")
                         {
-                            Win32.POINT p = new Win32.POINT();
-                            Cursor.Position = new Point(Convert.ToInt32(postParams["x"]), Convert.ToInt32(postParams["y"]));
+                            Event.MouseDown(postParams);
+                        }
+                        else if (type == "mouseup")
+                        {
+                            Event.MouseUp(postParams);
+                        }
+                        else if (type == "mousemove")
+                        {
+                            Event.MouseMove(postParams);
                         }
                     }
                 }
@@ -400,12 +473,14 @@ namespace BlinkingEye
         {
             //Console.WriteLine("We have {0} arguments", args.Length);
 
+            /*
             Console.WriteLine("We have these resource names:");
             var assembly = Assembly.GetExecutingAssembly();
             string[] resourceNames = assembly.GetManifestResourceNames();
             foreach (string rn in resourceNames)
                 Console.WriteLine("{0}", rn);
             Console.WriteLine();
+            */
 
             // Get settings
             switch (args.Length)
