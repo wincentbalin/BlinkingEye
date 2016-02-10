@@ -10,6 +10,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using System.Windows.Media.Imaging; // The only part from WPF is the PNG encoder
+using NetFwTypeLib;
 
 namespace BlinkingEye
 {
@@ -86,8 +87,28 @@ namespace BlinkingEye
 
     static class Event
     {
+        private static bool testMode = false;
+
+        public static bool TestMode
+        {
+            get
+            {
+                return testMode;
+            }
+            set
+            {
+                if (testMode != value)
+                    testMode = value;
+            }
+        }
+
+        private static Point lastPos;
+
         public static void MouseDown(Dictionary<string, string> p)
         {
+            if (!p.ContainsKey("which"))
+                return;
+
             Console.WriteLine("MouseDown");
 
             int which = Convert.ToInt32(p["which"]);
@@ -107,6 +128,9 @@ namespace BlinkingEye
 
         public static void MouseUp(Dictionary<string, string> p)
         {
+            if (!p.ContainsKey("which"))
+                return;
+
             Console.WriteLine("MouseUp");
 
             int which = Convert.ToInt32(p["which"]);
@@ -139,7 +163,15 @@ namespace BlinkingEye
             int x = Convert.ToInt32(xs) - primaryScreenBounds.Left;
             int y = Convert.ToInt32(ys) - primaryScreenBounds.Top;
             Console.WriteLine("Converted coords: {0},{1}", x, y);
-            Cursor.Position = new Point(x, y);
+
+            if (testMode)
+            {
+                lastPos = new Point(x, y);
+            }
+            else
+            {
+                Cursor.Position = new Point(x, y);
+            }
         }
     };
 
@@ -469,6 +501,29 @@ namespace BlinkingEye
                 return input;
         }
 
+        private static void TestForTestMode()
+        {
+            if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "testmode.txt")))
+                Event.TestMode = true;
+        }
+
+        private static void AddFirewallRule()
+        {
+            // From http://blogs.msdn.com/b/securitytools/archive/2009/08/21/automating-windows-firewall-settings-with-c.aspx
+            // and from http://stackoverflow.com/questions/8889587/automating-windows-firewall-with
+            Type NetOpenPortType = Type.GetTypeFromCLSID(new Guid("{0CA545C6-37AD-4A6C-BF92-9F7610067EF5}"));
+            INetFwOpenPort port = (INetFwOpenPort)Activator.CreateInstance(NetOpenPortType);
+            port.Name = "BlinkingEye";
+            port.Port = Program.port;
+
+            Type NetFwMgrType = Type.GetTypeFromProgID("HNetCfg.FwMgr", false);
+            INetFwMgr mgr = (INetFwMgr)Activator.CreateInstance(NetFwMgrType);
+
+            INetFwOpenPorts ports = (INetFwOpenPorts)mgr.LocalPolicy.CurrentProfile.GloballyOpenPorts;
+            ports.Add(port);
+        }
+
+
         static void Main(string[] args)
         {
             //Console.WriteLine("We have {0} arguments", args.Length);
@@ -510,10 +565,13 @@ namespace BlinkingEye
             }
 
             TestPresenceOfPNGOptimizer();
+            TestForTestMode();
 
             parentPath = "/" + password + "/";
             string serverPrefix = String.Format("http://{0}:{1}/{2}/", address, port, password);
             Console.WriteLine("Starting server listening on {0}", serverPrefix);
+
+            AddFirewallRule();
 
             server = new HttpListener();
             server.Prefixes.Add(serverPrefix);
