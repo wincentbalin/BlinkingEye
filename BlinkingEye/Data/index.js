@@ -169,10 +169,8 @@
   };
   */
   
-  $(screen).mousedown(function(event)
+  var mouseStateChangeParams = function(event)
   {
-//    console.log("Mouse down; pageX: " + event.pageX + ", pageY: " + event.pageY);
-    mouseIsDown = true;
     var params =
     {
       which: event.which,
@@ -182,7 +180,14 @@
       shiftKey: event.shiftKey
     };
     $.extend(params, mouseMovePos);
-    sendEvent("mousedown", params);
+    return params;
+  };
+  
+  $(screen).mousedown(function(event)
+  {
+//    console.log("Mouse down; pageX: " + event.pageX + ", pageY: " + event.pageY);
+    mouseIsDown = true;
+    sendEvent("mousedown", mouseStateChangeParams(event));
     event.preventDefault();
     event.stopPropagation();
   }).mousemove(function(event)
@@ -203,16 +208,7 @@
   {
 //    console.log("Mouse up; pageX: " + event.pageX + ", pageY: " + event.pageY);
     mouseIsDown = false;
-    var params =
-    {
-      which: event.which,
-      altKey: event.altKey,
-      controlKey: event.controlKey,
-      metaKey: event.metaKey,
-      shiftKey: event.shiftKey
-    };
-    $.extend(params, mouseMovePos);
-    sendEvent("mouseup", params);
+    sendEvent("mouseup", mouseStateChangeParams(event));
     event.preventDefault();
     event.stopPropagation();
   });
