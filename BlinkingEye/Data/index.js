@@ -200,7 +200,7 @@
     }
     else
     {
-      // restartMouseMoveTimer();
+       restartMouseMoveTimer();
     }
     event.preventDefault();
     event.stopPropagation();
