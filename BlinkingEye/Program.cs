@@ -580,6 +580,8 @@ namespace BlinkingEye
 
             Console.WriteLine("Press Enter to terminate this server...");
             Console.ReadLine();
+
+            // We could remove the previously added firewall rule here, but for now we will not.
         }
     }
 }
