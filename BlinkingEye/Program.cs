@@ -557,8 +557,9 @@ namespace BlinkingEye
 
                 default:
                     Console.WriteLine("Usage:\tBlinkingEye [address [port [password]]]");
-                    Console.WriteLine("\taddress\tIP address to listen on");
-                    Console.WriteLine("\tport\tIP port to listen at");
+                    Console.WriteLine();
+                    Console.WriteLine("\taddress\t\tIP address to listen on");
+                    Console.WriteLine("\tport\t\tPort to listen at");
                     Console.WriteLine("\tpassword\tPassword for this connexion");
                     Environment.Exit(1);
                     break;
