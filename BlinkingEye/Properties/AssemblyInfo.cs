@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("BlinkingEye")]
-[assembly: AssemblyCopyright("Copyright © Wincent Balin 2016")]
+[assembly: AssemblyCopyright("Copyright © Wincent Balin 2016-2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
