@@ -8,6 +8,7 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Web;
 using System.Windows.Forms;
 using System.Windows.Media.Imaging; // The only part from WPF is the PNG encoder
 using NetFwTypeLib;
@@ -252,12 +253,11 @@ namespace BlinkingEye
                         using (StreamReader reader = new StreamReader(body, context.Request.ContentEncoding))
                             postData = reader.ReadToEnd();
 
-                    // Here mostly from http://stackoverflow.com/questions/19031438/parse-post-parameters-from-httplistener
                     Dictionary<string, string> postParams = new Dictionary<string, string>();
                     foreach (string postParam in postData.Split('&'))
                     {
                         string[] kvPair = postParam.Split('=');
-                        postParams.Add(kvPair[0], WebUtility.HtmlDecode(kvPair[1]));
+                        postParams.Add(kvPair[0], HttpUtility.HtmlDecode(kvPair[1]));
                     }
 
                     if (postParams.ContainsKey("type")) // We have an event
