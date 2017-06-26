@@ -1,13 +1,31 @@
-﻿$(document).ready(function()
+﻿(function()
 {
   //setTimeout(function() { alert("xxx"); }, 2000);
   var screen = document.getElementById('screen'),
       context = screen.getContext('2d'),
       ctr = 0,
       initial = true,
-      failSafeTimerId;
+      failSafeTimerId,
+      extend = function()  // From https://stackoverflow.com/questions/11197247/javascript-equivalent-of-jquerys-extend-method
+      {
+        for (var i = 1, ii = arguments.length; i < ii; i++)
+          for (var key in arguments[i])
+            if (arguments[i].hasOwnProperty(key))
+              arguments[0][key] = arguments[i][key];
+        return arguments[0];
+      };
         
-  $.get("screen-size.json", function(data) { $.extend(screen, data); });
+  (function()
+  {
+    var request = new XMLHttpRequest();
+    request.open('GET', 'screen-size.json', true);
+    request.onload = function()
+    {
+      if (request.status === 200)
+        extend(screen, JSON.parse(request.responseText));
+    };
+    request.send();
+  })();
             
   var loadImage = function(diff, callback)
   {
@@ -55,17 +73,28 @@
       mouseMoveDelay = 2000, // ms
       mouseMoveTimerId = null,
       mouseMovePos = { x: -1, y: -1 },
-      mouseMoveLastPos = $.extend({}, mouseMovePos);
+      mouseMoveLastPos = extend({}, mouseMovePos);
        
   var sendEvent = function(type, otherParams)
   {
     console.log("Document's location is " + document.location);
     console.log("Event type is " + type);
+
     var params = { type: type };
-    $.extend(params, otherParams);
-    $.post(document.location,
-           params,
-           function(data) { /* Here could be a callback. */ });
+    extend(params, otherParams);
+
+    var qa = [];
+    for (var key in params)
+      qa.push(encodeURIComponent(key) + "=" + encodeURIComponent(params[key]));
+
+    var request = new XMLHttpRequest();
+    request.open('POST', document.location, true);
+    request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+    request.onload = function()
+    {
+      // Callback
+    };
+    request.send(qa.join('&'));
   };
         
   var restartMouseMoveTimer = function()
@@ -79,7 +108,7 @@
         if (mouseMovePos.x !== mouseMoveLastPos.x && mouseMovePos.y !== mouseMoveLastPos.y)
         {
           sendEvent("mousemove", mouseMovePos);
-          mouseMoveLastPos = $.extend({}, mouseMovePos);
+          mouseMoveLastPos = extend({}, mouseMovePos);
         }
       }, mouseMoveDelay);
     }
@@ -179,18 +208,20 @@
       metaKey: event.metaKey,
       shiftKey: event.shiftKey
     };
-    $.extend(params, mouseMovePos);
+    extend(params, mouseMovePos);
     return params;
   };
   
-  $(screen).mousedown(function(event)
+  screen.onmousedown = function(event)
   {
 //    console.log("Mouse down; pageX: " + event.pageX + ", pageY: " + event.pageY);
     mouseIsDown = true;
     sendEvent("mousedown", mouseStateChangeParams(event));
     event.preventDefault();
     event.stopPropagation();
-  }).mousemove(function(event)
+  };
+  
+  screen.onmousemove = function(event)
   {
     mouseMovePos = { 'x': event.pageX, 'y': event.pageY };
           
@@ -204,17 +235,19 @@
     }
     event.preventDefault();
     event.stopPropagation();
-  }).mouseup(function(event)
+  };
+  
+  screen.onmouseup = function(event)
   {
 //    console.log("Mouse up; pageX: " + event.pageX + ", pageY: " + event.pageY);
     mouseIsDown = false;
     sendEvent("mouseup", mouseStateChangeParams(event));
     event.preventDefault();
     event.stopPropagation();
-  });
+  };
         
   /*
-  $(screen).keydown(function(event)
+  screen.onkeydown = function(event)
   {
 //    console.log("Key down; pageX: " + event.pageX + ", pageY: " + event.pageY + ", metaKey: " + event.metaKey);
           
@@ -222,7 +255,9 @@
           
     if (key !== null)
       sendEvent("keydown");
-  }).keyup(function(event)
+  };
+  
+  screen.onkeyup = function(event)
   {
 //    console.log("Key up; pageX: " + event.pageX + ", pageY: " + event.pageY + ", metaKey: " + event.metaKey);
           
@@ -230,12 +265,14 @@
           
     if (key !== null)
       sendEvent("keyup");
-  }).keypress(function(event)
+  };
+  
+  screen.onkeypress = function(event)
   {
     var key = recognizeKeyPress(event);
             
     if (key !== null)
       sendEvent("keypress");
-  });
+  };
   */
-});
+})();
