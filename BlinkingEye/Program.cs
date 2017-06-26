@@ -84,6 +84,13 @@ namespace BlinkingEye
 
         [DllImport("User32.dll")]
         public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
+
+        // ... and from http://www.pinvoke.net/default.aspx/user32.keybd_event
+        public const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
+        public const uint KEYEVENTF_KEYUP = 0x0002;
+
+        [DllImport("User32.dll")]
+        public static extern void keybd_event(byte bvk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
     }
 
     static class Event
