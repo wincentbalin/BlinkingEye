@@ -90,23 +90,69 @@
         request.send(qa.join('&'));
     };
 
+    // Mouse events
     var restartMouseMoveTimer = function() {
-        if (mouseMoveTimerId === null) {
-            mouseMoveTimerId = setTimeout(function() {
-                mouseMoveTimerId = null;
+            if (mouseMoveTimerId === null) {
+                mouseMoveTimerId = setTimeout(function() {
+                    mouseMoveTimerId = null;
 
-                if (mouseMovePos.x !== mouseMoveLastPos.x && mouseMovePos.y !== mouseMoveLastPos.y) {
-                    sendEvent("mousemove", mouseMovePos);
-                    mouseMoveLastPos = extend({}, mouseMovePos);
-                }
-            }, mouseMoveDelay);
-        } else {
-            clearTimeout(mouseMoveTimerId);
-            mouseMoveTimerId = null;
-            restartMouseMoveTimer();
-        }
+                    if (mouseMovePos.x !== mouseMoveLastPos.x && mouseMovePos.y !== mouseMoveLastPos.y) {
+                        sendEvent("mousemove", mouseMovePos);
+                        mouseMoveLastPos = extend({}, mouseMovePos);
+                    }
+                }, mouseMoveDelay);
+            } else {
+                clearTimeout(mouseMoveTimerId);
+                mouseMoveTimerId = null;
+                restartMouseMoveTimer();
+            }
+        },
+        mouseStateChangeParams = function(event) {
+            var params = {
+                which: event.which,
+                altKey: event.altKey,
+                controlKey: event.controlKey,
+                metaKey: event.metaKey,
+                shiftKey: event.shiftKey
+            };
+
+            extend(params, mouseMovePos);
+            return params;
+        };
+
+    screen.onmousedown = function(event) {
+        //console.log("Mouse down; pageX: " + event.pageX + ", pageY: " + event.pageY);
+        mouseIsDown = true;
+        sendEvent("mousedown", mouseStateChangeParams(event));
+        event.preventDefault();
+        event.stopPropagation();
     };
 
+    screen.onmousemove = function(event) {
+        mouseMovePos = {
+            'x': event.pageX,
+            'y': event.pageY
+        };
+
+        if (mouseIsDown) {
+          sendEvent("mousemove", mouseMovePos);
+        } else {
+            restartMouseMoveTimer();
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+    };
+
+    screen.onmouseup = function(event) {
+        //console.log("Mouse up; pageX: " + event.pageX + ", pageY: " + event.pageY);
+        mouseIsDown = false;
+        sendEvent("mouseup", mouseStateChangeParams(event));
+        event.preventDefault();
+        event.stopPropagation();
+    };
+
+    // Keyboard events
     /*
     var recognizeKeyPress = function(event) {  // This code comes from http://unixpapa.com/js/key.html
         var c = null;
@@ -179,51 +225,6 @@
         return null;
     };
     */
-
-    var mouseStateChangeParams = function(event) {
-        var params = {
-            which: event.which,
-            altKey: event.altKey,
-            controlKey: event.controlKey,
-            metaKey: event.metaKey,
-            shiftKey: event.shiftKey
-        };
-
-        extend(params, mouseMovePos);
-        return params;
-    };
-
-    screen.onmousedown = function(event) {
-        //    console.log("Mouse down; pageX: " + event.pageX + ", pageY: " + event.pageY);
-        mouseIsDown = true;
-        sendEvent("mousedown", mouseStateChangeParams(event));
-        event.preventDefault();
-        event.stopPropagation();
-    };
-
-    screen.onmousemove = function(event) {
-        mouseMovePos = {
-            'x': event.pageX,
-            'y': event.pageY
-        };
-
-        if (mouseIsDown) {
-          sendEvent("mousemove", mouseMovePos);
-        } else {
-            restartMouseMoveTimer();
-        }
-
-        event.preventDefault();
-        event.stopPropagation();
-    };
-
-    screen.onmouseup = function(event) {
-        //console.log("Mouse up; pageX: " + event.pageX + ", pageY: " + event.pageY);
-        mouseIsDown = false;
-        sendEvent("mouseup", mouseStateChangeParams(event));
-        event.preventDefault();
-        event.stopPropagation();
-    };
 
     /*
     screen.onkeydown = function(event) {
