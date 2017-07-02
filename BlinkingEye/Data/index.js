@@ -176,6 +176,8 @@
                 break;
         }
 
+        event.stopPropagation();
+        event.preventDefault();
         return false;  // This is both preventDefault() and stopPropagation()
     };
 
