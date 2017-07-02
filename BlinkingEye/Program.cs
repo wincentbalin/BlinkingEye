@@ -126,6 +126,9 @@ namespace BlinkingEye
 
             Console.WriteLine("MouseDown");
 
+            if (testMode)
+                Win32.SetCursorPos(lastPos.X, lastPos.Y);
+
             int which = Convert.ToInt32(p["which"]);
             uint button = 0;
 
@@ -147,6 +150,9 @@ namespace BlinkingEye
                 return;
 
             Console.WriteLine("MouseUp");
+
+            if (testMode)
+                Win32.SetCursorPos(lastPos.X, lastPos.Y);
 
             int which = Convert.ToInt32(p["which"]);
             uint button = 0;
