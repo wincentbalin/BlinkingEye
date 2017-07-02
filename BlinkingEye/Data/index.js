@@ -158,6 +158,14 @@
                 updateMouseMovePos(event);
                 restartMouseMoveTimer();
                 break;
+            case 'wheel':
+                if ('deltaX' in event && event.deltaX !== 0)
+                    params.deltaX = event.deltaX;
+                if ('deltaY' in event && event.deltaY !== 0)
+                    params.deltaY = event.deltaY;
+                if ('deltaX' in params || 'deltaY' in params)
+                    eventQueue.push(params);
+                break;
             case 'keydown':
             case 'keyup':
                 params.key = event.key;
@@ -194,6 +202,7 @@
         installHandler(screen, 'mousedown', commonEventHandler);
         installHandler(screen, 'mousemove', commonEventHandler);
         installHandler(screen, 'mouseup', commonEventHandler);
+        installHandler(window, 'wheel', commonEventHandler);
         installHandler(window, 'keydown', commonEventHandler);
         installHandler(window, 'keypress', commonEventHandler);
         installHandler(window, 'keyup', commonEventHandler);

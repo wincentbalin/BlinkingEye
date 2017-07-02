@@ -82,7 +82,7 @@ namespace BlinkingEye
         public const uint MOUSEEVENTF_XBUTTON2 = 0x00000002;
 
         [DllImport("User32.dll")]
-        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
+        public static extern void mouse_event(uint dwFlags, int dx, int dy, int dwData, UIntPtr dwExtraInfo);
 
         [DllImport("user32.dll")]
         public static extern bool SetCursorPos(int x, int y);
@@ -185,6 +185,23 @@ namespace BlinkingEye
                 lastPos = new Point(x, y);
             else
                 Win32.SetCursorPos(x, y);
+        }
+
+        public static void Wheel(Dictionary<string, string> p)
+        {
+            // No guard needed here, because both X- and Y-dimension are explicitely checked against
+
+            if (p.ContainsKey("deltaY"))  // The Y-dimension is the usual one for mouse wheel
+            {
+                int deltaY = Convert.ToInt32(p["deltaY"]);
+                Win32.mouse_event(Win32.MOUSEEVENTF_WHEEL, 0, 0, deltaY * -40, UIntPtr.Zero);
+            }
+
+            if (p.ContainsKey("deltaX"))
+            {
+                int deltaX = Convert.ToInt32(p["deltaX"]);
+                Win32.mouse_event(Win32.MOUSEEVENTF_HWHEEL, 0, 0, deltaX * -40, UIntPtr.Zero);
+            }
         }
 
         public static void KeyDown(Dictionary<string, string> p)
@@ -310,6 +327,7 @@ namespace BlinkingEye
                             case "mousedown": Event.MouseDown(postParams); break;
                             case "mouseup": Event.MouseUp(postParams); break;
                             case "mousemove": Event.MouseMove(postParams); break;
+                            case "wheel": Event.Wheel(postParams); break;
                             case "keydown": Event.KeyDown(postParams); break;
                             case "keyup": Event.KeyUp(postParams); break;
                             default: Console.WriteLine("Unknown event: " + type); break;
