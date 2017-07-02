@@ -178,7 +178,7 @@ namespace BlinkingEye
             if (testMode)
                 lastPos = new Point(x, y);
             else
-                Cursor.Position = new Point(x, y);
+                Win32.SetCursorPos(x, y);
         }
 
         public static void KeyDown(Dictionary<string, string> p)
