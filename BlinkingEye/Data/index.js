@@ -30,7 +30,6 @@
         image.onload = function () {
             ctr++;
             initial = false;
-            clearTimeout(failSafeTimerId);
             context.drawImage(image, 0, 0);
             callback();
         };
