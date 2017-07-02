@@ -104,15 +104,15 @@
     // Mouse events
     var mouseIsDown = false,
         mouseMoveDelay = 2000, // ms
-        mouseMoveTimerId = null,
+        mouseMoveTimerId,
         mouseMovePos = { x: -1, y: -1 },
         mouseMoveLastPos = extend({}, mouseMovePos);
 
     var restartMouseMoveTimer = function() {
-            if (mouseMoveTimerId === null) {
+            if (!mouseMoveTimerId) {
                 mouseMoveTimerId = setTimeout(function() {
-                    mouseMoveTimerId = null;
-
+                    mouseMoveTimerId = undefined;
+                    mouseMovePos = { x: event.pageX, y: event.pageY };
                     if (mouseMovePos.x !== mouseMoveLastPos.x || mouseMovePos.y !== mouseMoveLastPos.y) {
                         eventQueue.push(extend({type: 'mousemove'}, mouseMovePos));
                         mouseMoveLastPos = extend({}, mouseMovePos);
@@ -120,12 +120,17 @@
                 }, mouseMoveDelay);
             } else {
                 clearTimeout(mouseMoveTimerId);
-                mouseMoveTimerId = null;
+                mouseMoveTimerId = undefined;
                 restartMouseMoveTimer();
             }
         };
 
     // Install event handlers
+    var createMouseMoveEventParams = function() {
+        mouseMovePos = { x: event.pageX, y: event.pageY };
+        return extend({type: 'mousemove'}, mouseMovePos);
+    };
+
     var commonEventHandler = function(event) {
         var params = {
             type: event.type
@@ -144,27 +149,19 @@
                 eventQueue.push(params);
                 break;
             case 'mousedown':
+                eventQueue.push(createMouseMoveEventParams());
                 mouseIsDown = true;
                 params.which = event.which;
                 eventQueue.push(params);
                 break;
             case 'mouseup':
+                eventQueue.push(createMouseMoveEventParams());
                 mouseIsDown = false;
                 params.which = event.which;
                 eventQueue.push(params);
                 break;
             case 'mousemove':
-                mouseMovePos = {
-                    x: event.pageX,
-                    y: event.pageY
-                };
-
-                if (mouseIsDown) {
-                    extend(params, mouseMovePos);
-                    eventQueue.push(params);
-                } else {
-                    restartMouseMoveTimer();
-                }
+                restartMouseMoveTimer();
                 break;
             default:
                 console.log('Unknown event of type', type);
