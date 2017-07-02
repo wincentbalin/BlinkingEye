@@ -117,6 +117,21 @@ namespace BlinkingEye
             }
         }
 
+        private static Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+
+        public static Rectangle ScreenBounds
+        {
+            get
+            {
+                return screenBounds;
+            }
+            set
+            {
+                if (screenBounds != value)
+                    screenBounds = value;
+            }
+        }
+
         private static Point lastPos;
 
         public static void MouseDown(Dictionary<string, string> p)
@@ -174,12 +189,9 @@ namespace BlinkingEye
             if (!p.ContainsKey("x") || !p.ContainsKey("y"))
                 return;
 
-            // Some things were taken from https://github.com/T1T4N/NVNC/blob/master/NVNC/Utils/Robot.cs
-            string xs = p["x"];
-            string ys = p["y"];
-            Rectangle primaryScreenBounds = Screen.PrimaryScreen.Bounds;
-            int x = Convert.ToInt32(xs) - primaryScreenBounds.Left;
-            int y = Convert.ToInt32(ys) - primaryScreenBounds.Top;
+            int x = Convert.ToInt32(p["x"]) + screenBounds.Left;
+            int y = Convert.ToInt32(p["y"]) + screenBounds.Top;
+            Console.WriteLine(string.Format("x: {0}, y: {1}", x, y));
 
             if (testMode)
                 lastPos = new Point(x, y);
@@ -230,14 +242,10 @@ namespace BlinkingEye
     class Program
     {
         private static HttpListener server;
-
-        private static string address = "*";
-        private static int port = 3130;
-        private static string password = "";
-
         private static string parentPath;
 
-        private static Rectangle primaryScreenBounds = Screen.PrimaryScreen.Bounds;
+        private static Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
+        private static Rectangle normalisedScreenBounds = screenBounds;
         private static Bitmap previousScreenShot = null;
         private static PixelFormat screenShotFormat = PixelFormat.Format24bppRgb;
 
@@ -382,19 +390,35 @@ namespace BlinkingEye
                 return "application/octet-stream";
         }
 
+        private static void SetupScreen(int screenNumber)
+        {
+            Screen[] screens = Screen.AllScreens;
+
+            if (screenNumber < 1 || screenNumber > screens.Length)
+            {
+                Console.WriteLine("Specified screen out of range.");
+                Console.WriteLine(string.Format("Choose from 1 to {0}.", screens.Length));
+                Environment.Exit(1);
+            }
+
+            screenBounds = screens[screenNumber - 1].Bounds;
+            normalisedScreenBounds = new Rectangle(new Point(0, 0), screenBounds.Size);
+            Event.ScreenBounds = screenBounds;
+        }
+
         private static byte[] GetScreen()
         {
             // Copy screen contents to bitmap
-            Bitmap currentScreenShot = new Bitmap(primaryScreenBounds.Width,
-                                                  primaryScreenBounds.Height,
+            Bitmap currentScreenShot = new Bitmap(screenBounds.Width,
+                                                  screenBounds.Height,
                                                   screenShotFormat);
 
             Graphics g = Graphics.FromImage(currentScreenShot);
-            g.CopyFromScreen(primaryScreenBounds.X,
-                             primaryScreenBounds.Y,
+            g.CopyFromScreen(screenBounds.X,
+                             screenBounds.Y,
                              0,
                              0,
-                             primaryScreenBounds.Size,
+                             screenBounds.Size,
                              CopyPixelOperation.SourceCopy);
 
             // Pack the image into a byte array with PNG format
@@ -421,26 +445,26 @@ namespace BlinkingEye
             const PixelFormat diffScreenShotFormat = PixelFormat.Format32bppArgb;
 
             // Copy screen contents to bitmap
-            Bitmap currentScreenShot = new Bitmap(primaryScreenBounds.Width,
-                                                  primaryScreenBounds.Height,
+            Bitmap currentScreenShot = new Bitmap(screenBounds.Width,
+                                                  screenBounds.Height,
                                                   screenShotFormat);
 
             Graphics g = Graphics.FromImage(currentScreenShot);
-            g.CopyFromScreen(primaryScreenBounds.X,
-                             primaryScreenBounds.Y,
+            g.CopyFromScreen(screenBounds.X,
+                             screenBounds.Y,
                              0,
                              0,
-                             primaryScreenBounds.Size,
+                             screenBounds.Size,
                              CopyPixelOperation.SourceCopy);
 
             // Create difference image
-            Bitmap diff = new Bitmap(primaryScreenBounds.Width,
-                                     primaryScreenBounds.Height,
+            Bitmap diff = new Bitmap(screenBounds.Width,
+                                     screenBounds.Height,
                                      diffScreenShotFormat);
 
-            BitmapData cssbd = currentScreenShot.LockBits(primaryScreenBounds, ImageLockMode.ReadOnly, screenShotFormat);
-            BitmapData pssbd = previousScreenShot.LockBits(primaryScreenBounds, ImageLockMode.ReadOnly, screenShotFormat);
-            BitmapData dssbd = diff.LockBits(primaryScreenBounds, ImageLockMode.ReadWrite, diffScreenShotFormat);
+            BitmapData cssbd = currentScreenShot.LockBits(normalisedScreenBounds, ImageLockMode.ReadOnly, screenShotFormat);
+            BitmapData pssbd = previousScreenShot.LockBits(normalisedScreenBounds, ImageLockMode.ReadOnly, screenShotFormat);
+            BitmapData dssbd = diff.LockBits(normalisedScreenBounds, ImageLockMode.ReadWrite, diffScreenShotFormat);
 
             int cssSize = cssbd.Stride * cssbd.Height;
             int pssSize = pssbd.Stride * pssbd.Height; // should be identical to cssSize
@@ -456,9 +480,9 @@ namespace BlinkingEye
             Marshal.Copy(cssbd.Scan0, cssd, 0, cssSize);
             Marshal.Copy(pssbd.Scan0, pssd, 0, pssSize);
 
-            for (int y = 0; y < primaryScreenBounds.Height; y++)
+            for (int y = 0; y < screenBounds.Height; y++)
             {
-                for (int x = 0; x < primaryScreenBounds.Width; x++)
+                for (int x = 0; x < screenBounds.Width; x++)
                 {
                     int cssi = y * cssbd.Stride + x * ssbpp;
                     int pssi = y * pssbd.Stride + x * ssbpp;
@@ -511,8 +535,8 @@ namespace BlinkingEye
 
         private static byte[] GetScreenSize()
         {
-            string contents = "{ \"width\": " + primaryScreenBounds.Width + ", " +
-                               "\"height\": " + primaryScreenBounds.Height + " }";
+            string contents = "{ \"width\": " + screenBounds.Width + ", " +
+                               "\"height\": " + screenBounds.Height + " }";
             return Encoding.UTF8.GetBytes(contents);
         }
 
@@ -565,14 +589,14 @@ namespace BlinkingEye
                 Event.TestMode = true;
         }
 
-        private static void AddFirewallRule()
+        private static void AddFirewallRule(int serverPort)
         {
             // From http://blogs.msdn.com/b/securitytools/archive/2009/08/21/automating-windows-firewall-settings-with-c.aspx
             // and from http://stackoverflow.com/questions/8889587/automating-windows-firewall-with
             Type NetOpenPortType = Type.GetTypeFromCLSID(new Guid("{0CA545C6-37AD-4A6C-BF92-9F7610067EF5}"));
             INetFwOpenPort port = (INetFwOpenPort)Activator.CreateInstance(NetOpenPortType);
             port.Name = "BlinkingEye";
-            port.Port = Program.port;
+            port.Port = serverPort;
 
             Type NetFwMgrType = Type.GetTypeFromProgID("HNetCfg.FwMgr", false);
             INetFwMgr mgr = (INetFwMgr)Activator.CreateInstance(NetFwMgrType);
@@ -584,20 +608,22 @@ namespace BlinkingEye
 
         static void Main(string[] args)
         {
-            //Console.WriteLine("We have {0} arguments", args.Length);
+            int screenNumber = 1;
+            string address = "*";
+            int port = 3130;
+            string password = "";
 
-            /*
-            Console.WriteLine("We have these resource names:");
-            var assembly = Assembly.GetExecutingAssembly();
-            string[] resourceNames = assembly.GetManifestResourceNames();
-            foreach (string rn in resourceNames)
-                Console.WriteLine("{0}", rn);
-            Console.WriteLine();
-            */
 
             // Get settings
             switch (args.Length)
             {
+                case 4:
+                    screenNumber = Convert.ToInt16(args[args.Length - 4]);
+                    address = args[args.Length - 3];
+                    port = Convert.ToInt16(args[args.Length - 2]);
+                    password = args[args.Length - 1];
+                    break;
+
                 case 3:
                     address = args[args.Length - 3];
                     port = Convert.ToInt16(args[args.Length - 2]);
@@ -614,8 +640,9 @@ namespace BlinkingEye
                     break;
 
                 default:
-                    Console.WriteLine("Usage:\tBlinkingEye [[address] port] password");
+                    Console.WriteLine("Usage:\tBlinkingEye [[[screen] address] port] password");
                     Console.WriteLine();
+                    Console.WriteLine("\tscreen\t\tNumber of the screen to capture (default: 1)");
                     Console.WriteLine("\taddress\t\tIP address to listen on (default: all)");
                     Console.WriteLine("\tport\t\tPort to listen at (default: 3130)");
                     Console.WriteLine("\tpassword\tPassword for this connexion");
@@ -623,6 +650,7 @@ namespace BlinkingEye
                     break;
             }
 
+            SetupScreen(screenNumber);
             TestPresenceOfPNGOptimizer();
             TestForTestMode();
 
@@ -630,7 +658,7 @@ namespace BlinkingEye
             string serverPrefix = String.Format("http://{0}:{1}/{2}/", address, port, password);
             Console.WriteLine("Starting server listening on {0}", serverPrefix);
 
-            AddFirewallRule();
+            AddFirewallRule(port);
 
             server = new HttpListener();
             server.Prefixes.Add(serverPrefix);
