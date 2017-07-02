@@ -189,38 +189,24 @@ namespace BlinkingEye
 
         public static void KeyDown(Dictionary<string, string> p)
         {
-            if (!p.ContainsKey("key"))
+            if (!p.ContainsKey("keyCode"))
                 return;
 
             Console.WriteLine("Got keydown event, key: " + p["key"] + ", keyCode: " + p["keyCode"]);
-            byte virtualKey = Key2VirtualKey(p["key"]);
+
+            byte keyCode = Convert.ToByte(p["keyCode"]);
+            Win32.keybd_event(keyCode, 0, 0, UIntPtr.Zero);
         }
 
         public static void KeyUp(Dictionary<string, string> p)
         {
-            if (!p.ContainsKey("key"))
+            if (!p.ContainsKey("keyCode"))
                 return;
 
             Console.WriteLine("Got keyup event, key: " + p["key"] + ", keyCode: " + p["keyCode"]);
-            byte virtualKey = Key2VirtualKey(p["key"]);
-        }
 
-        private static byte Key2VirtualKey(string key)
-        {
-            byte result = 0;
-
-            switch (key)
-            {
-/*                case "Shift":
-                    result = 
-*/
-                default:
-                    Console.WriteLine("Unknown key " + key);
-                    result = 0;
-                    break;
-            }
-
-            return result;
+            byte keyCode = Convert.ToByte(p["keyCode"]);
+            Win32.keybd_event(keyCode, 0, Win32.KEYEVENTF_KEYUP, UIntPtr.Zero);
         }
     };
 
