@@ -288,6 +288,8 @@ namespace BlinkingEye
 
                 context.Response.AddHeader("Cache-Control", "no-cache, no-store, must-revalidate");
                 context.Response.ContentType = "application/json";
+                byte[] standardReply = Encoding.UTF8.GetBytes("{}");
+                context.Response.OutputStream.Write(standardReply, 0, standardReply.Length);
                 context.Response.OutputStream.Close();
             }
         }
