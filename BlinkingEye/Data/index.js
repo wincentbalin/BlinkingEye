@@ -107,12 +107,18 @@
         mouseMoveTimerId,
         mouseMovePos = { x: -1, y: -1 },
         mouseMoveLastPos = extend({}, mouseMovePos);
+    
+    var updateMouseMovePos = function(event) {
+        mouseMovePos = {
+            x: 'pageX' in event ? event.pageX : event.clientX + document.documentElement.scrollLeft,
+            y: 'pageY' in event ? event.pageY : event.clientY + document.documentElement.scrollTop
+        };
+    };
 
     var restartMouseMoveTimer = function() {
             if (!mouseMoveTimerId) {
                 mouseMoveTimerId = setTimeout(function() {
                     mouseMoveTimerId = undefined;
-                    mouseMovePos = { x: event.pageX, y: event.pageY };
                     if (mouseMovePos.x !== mouseMoveLastPos.x || mouseMovePos.y !== mouseMoveLastPos.y) {
                         eventQueue.push(extend({type: 'mousemove'}, mouseMovePos));
                         mouseMoveLastPos = extend({}, mouseMovePos);
@@ -126,8 +132,8 @@
         };
 
     // Install event handlers
-    var createMouseMoveEventParams = function() {
-        mouseMovePos = { x: event.pageX, y: event.pageY };
+    var createMouseMoveEventParams = function(event) {
+        updateMouseMovePos(event);
         return extend({type: 'mousemove'}, mouseMovePos);
     };
 
@@ -149,18 +155,19 @@
                 eventQueue.push(params);
                 break;
             case 'mousedown':
-                eventQueue.push(createMouseMoveEventParams());
+                eventQueue.push(createMouseMoveEventParams(event));
                 mouseIsDown = true;
                 params.which = event.which;
                 eventQueue.push(params);
                 break;
             case 'mouseup':
-                eventQueue.push(createMouseMoveEventParams());
+                eventQueue.push(createMouseMoveEventParams(event));
                 mouseIsDown = false;
                 params.which = event.which;
                 eventQueue.push(params);
                 break;
             case 'mousemove':
+                updateMouseMovePos(event);
                 restartMouseMoveTimer();
                 break;
             default:
