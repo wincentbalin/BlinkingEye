@@ -153,6 +153,8 @@
                     console.log('This browser uses neither keyCode nor which');
                 eventQueue.push(params);
                 break;
+            case 'keypress':  // Ignore them
+                break;
             case 'mousedown':
                 eventQueue.push(createMouseMoveEventParams(event));
                 mouseIsDown = true;
@@ -170,7 +172,7 @@
                 restartMouseMoveTimer();
                 break;
             default:
-                console.log('Unknown event of type', type);
+                console.log('Unknown event of type', event.type);
                 break;
         }
 
