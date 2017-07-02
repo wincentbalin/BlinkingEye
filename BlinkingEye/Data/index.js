@@ -33,6 +33,7 @@
             context.drawImage(image, 0, 0);
             callback();
         };
+        image.onerror = failSafeRestartLoading;
     };
 
     var failSafeRestartLoading = function() {

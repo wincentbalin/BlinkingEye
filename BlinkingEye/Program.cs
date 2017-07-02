@@ -264,7 +264,15 @@ namespace BlinkingEye
                     if (fileName == "screen.png")
                         bytes = GetScreen();
                     else if (fileName == "screen-diff.png")
-                        bytes = GetScreenDiff();
+                    {
+                        if (previousScreenShot != null)
+                            bytes = GetScreenDiff();
+                        else  // Special case: screen diff requested, but no previous screenshot to create a difference from
+                        {
+                            WriteError(context, HttpStatusCode.Conflict, "No image to create a difference from");
+                            return;
+                        }
+                    }
                     else if (fileName == "screen-size.json")
                         bytes = GetScreenSize();
                     else
