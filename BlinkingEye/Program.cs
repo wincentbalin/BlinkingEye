@@ -85,12 +85,20 @@ namespace BlinkingEye
         [DllImport("User32.dll")]
         public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, UIntPtr dwExtraInfo);
 
+        [DllImport("user32.dll")]
+        public static extern bool SetCursorPos(int x, int y);
+
         // ... and from http://www.pinvoke.net/default.aspx/user32.keybd_event
         public const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
         public const uint KEYEVENTF_KEYUP = 0x0002;
+        public const uint KEYEVENTF_UNICODE = 0x0004;
+        public const uint KEYEVENTF_SCANCODE = 0x0008;
 
         [DllImport("User32.dll")]
         public static extern void keybd_event(byte bvk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+
+        [DllImport("user32.dll")]
+        public static extern Byte MapVirtualKey(UInt32 uCode, UInt32 uMapType);
     }
 
     static class Event
@@ -164,22 +172,50 @@ namespace BlinkingEye
             // Some things were taken from https://github.com/T1T4N/NVNC/blob/master/NVNC/Utils/Robot.cs
             string xs = p["x"];
             string ys = p["y"];
-            Console.WriteLine("Coords: {0},{1}", xs, ys);
-            Console.WriteLine("Coords: {0},{1}", Convert.ToUInt32(xs), Convert.ToUInt32(ys));
-            Console.WriteLine("Primary screen bounds: {0}", Screen.PrimaryScreen.Bounds);
             Rectangle primaryScreenBounds = Screen.PrimaryScreen.Bounds;
             int x = Convert.ToInt32(xs) - primaryScreenBounds.Left;
             int y = Convert.ToInt32(ys) - primaryScreenBounds.Top;
-            Console.WriteLine("Converted coords: {0},{1}", x, y);
 
             if (testMode)
-            {
                 lastPos = new Point(x, y);
-            }
             else
-            {
                 Cursor.Position = new Point(x, y);
+        }
+
+        public static void KeyDown(Dictionary<string, string> p)
+        {
+            if (!p.ContainsKey("key"))
+                return;
+
+            Console.WriteLine("Got keydown event, key: " + p["key"] + ", keyCode: " + p["keyCode"]);
+            byte virtualKey = Key2VirtualKey(p["key"]);
+        }
+
+        public static void KeyUp(Dictionary<string, string> p)
+        {
+            if (!p.ContainsKey("key"))
+                return;
+
+            Console.WriteLine("Got keyup event, key: " + p["key"] + ", keyCode: " + p["keyCode"]);
+            byte virtualKey = Key2VirtualKey(p["key"]);
+        }
+
+        private static byte Key2VirtualKey(string key)
+        {
+            byte result = 0;
+
+            switch (key)
+            {
+/*                case "Shift":
+                    result = 
+*/
+                default:
+                    Console.WriteLine("Unknown key " + key);
+                    result = 0;
+                    break;
             }
+
+            return result;
         }
     };
 
@@ -270,18 +306,14 @@ namespace BlinkingEye
                     if (postParams.ContainsKey("type")) // We have an event
                     {
                         string type = postParams["type"];
-
-                        if (type == "mousedown")
+                        switch (type)
                         {
-                            Event.MouseDown(postParams);
-                        }
-                        else if (type == "mouseup")
-                        {
-                            Event.MouseUp(postParams);
-                        }
-                        else if (type == "mousemove")
-                        {
-                            Event.MouseMove(postParams);
+                            case "mousedown": Event.MouseDown(postParams); break;
+                            case "mouseup": Event.MouseUp(postParams); break;
+                            case "mousemove": Event.MouseMove(postParams); break;
+                            case "keydown": Event.KeyDown(postParams); break;
+                            case "keyup": Event.KeyUp(postParams); break;
+                            default: Console.WriteLine("Unknown event: " + type); break;
                         }
                     }
                 }

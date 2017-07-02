@@ -1,15 +1,11 @@
 ﻿(function() {
-    /*setTimeout(function() {
-        alert("xxx");
-    }, 2000);*/
-
+    // Screen handling part
     var screen = document.getElementById('screen'),
         context = screen.getContext('2d'),
         ctr = 0,
         initial = true,
         failSafeTimerId,
-        extend = function()  // From https://stackoverflow.com/questions/11197247/javascript-equivalent-of-jquerys-extend-method
-        {
+        extend = function() {  // From https://stackoverflow.com/questions/11197247/javascript-equivalent-of-jquerys-extend-method
             for (var i = 1, ii = arguments.length; i < ii; i++)
                 for (var key in arguments[i])
                     if (arguments[i].hasOwnProperty(key))
@@ -63,41 +59,57 @@
 
     reloadImage();
 
-    // Input events
+    // (Input-)Event handling part
+    var eventQueue = [],
+        eventRequest,
+        eventTimer;
+
+    var serializeObjectAsURLEncoded = function(obj) {
+        var pairs = [];
+
+        for (var key in obj)
+            pairs.push(encodeURIComponent(key) + '=' + encodeURIComponent(obj[key]));
+
+        return pairs.join('&');
+    };
+
+    var sendEvents = function() {
+        var event = eventQueue.shift();
+
+        console.log('event to send:', JSON.stringify(event));
+
+        eventRequest = new XMLHttpRequest();
+        eventRequest.open('POST', document.location, true);
+        eventRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+        eventRequest.onload = function() {
+            eventRequest = undefined;
+            if (eventQueue.length > 0)
+                sendEvents();
+        };
+        eventRequest.send(serializeObjectAsURLEncoded(event));
+    };
+
+    (function() {
+        eventTimer = setInterval(function() {
+            if (eventQueue.length > 0 && !eventRequest)
+                sendEvents();
+        }, 100);
+    })();
+
+    // Mouse events
     var mouseIsDown = false,
         mouseMoveDelay = 2000, // ms
         mouseMoveTimerId = null,
         mouseMovePos = { x: -1, y: -1 },
         mouseMoveLastPos = extend({}, mouseMovePos);
 
-    var sendEvent = function(type, otherParams) {
-        console.log("Document's location is " + document.location);
-        console.log("Event type is " + type);
-
-        var params = { type: type };
-        extend(params, otherParams);
-
-        var qa = [];
-        for (var key in params)
-            qa.push(encodeURIComponent(key) + "=" + encodeURIComponent(params[key]));
-
-        var request = new XMLHttpRequest();
-        request.open('POST', document.location, true);
-        request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
-        request.onload = function() {
-            // Callback
-        };
-        request.send(qa.join('&'));
-    };
-
-    // Mouse events
     var restartMouseMoveTimer = function() {
             if (mouseMoveTimerId === null) {
                 mouseMoveTimerId = setTimeout(function() {
                     mouseMoveTimerId = null;
 
-                    if (mouseMovePos.x !== mouseMoveLastPos.x && mouseMovePos.y !== mouseMoveLastPos.y) {
-                        sendEvent("mousemove", mouseMovePos);
+                    if (mouseMovePos.x !== mouseMoveLastPos.x || mouseMovePos.y !== mouseMoveLastPos.y) {
+                        eventQueue.push(extend({type: 'mousemove'}, mouseMovePos));
                         mouseMoveLastPos = extend({}, mouseMovePos);
                     }
                 }, mouseMoveDelay);
@@ -106,150 +118,72 @@
                 mouseMoveTimerId = null;
                 restartMouseMoveTimer();
             }
-        },
-        mouseStateChangeParams = function(event) {
-            var params = {
-                which: event.which,
-                altKey: event.altKey,
-                controlKey: event.controlKey,
-                metaKey: event.metaKey,
-                shiftKey: event.shiftKey
-            };
-
-            extend(params, mouseMovePos);
-            return params;
         };
 
-    screen.onmousedown = function(event) {
-        //console.log("Mouse down; pageX: " + event.pageX + ", pageY: " + event.pageY);
-        mouseIsDown = true;
-        sendEvent("mousedown", mouseStateChangeParams(event));
-        event.preventDefault();
-        event.stopPropagation();
+    // Install event handlers
+    var commonEventHandler = function(event) {
+        var params = {
+            type: event.type
+        };
+        
+        switch (params.type) {
+            case 'keydown':
+            case 'keyup':
+                params.key = event.key;
+                if ('keyCode' in event)
+                    params.keyCode = event.keyCode;
+                else if ('which' in event)
+                    params.keyCode = event.which;
+                else
+                    console.log('This browser uses neither keyCode nor which');
+                eventQueue.push(params);
+                break;
+            case 'mousedown':
+                mouseIsDown = true;
+                params.which = event.which;
+                eventQueue.push(params);
+                break;
+            case 'mouseup':
+                mouseIsDown = false;
+                params.which = event.which;
+                eventQueue.push(params);
+                break;
+            case 'mousemove':
+                mouseMovePos = {
+                    x: event.pageX,
+                    y: event.pageY
+                };
+
+                if (mouseIsDown) {
+                    extend(params, mouseMovePos);
+                    eventQueue.push(params);
+                } else {
+                    restartMouseMoveTimer();
+                }
+                break;
+            default:
+                console.log('Unknown event of type', type);
+                break;
+        }
+
+        return false;  // This is both preventDefault() and stopPropagation()
     };
 
-    screen.onmousemove = function(event) {
-        mouseMovePos = {
-            'x': event.pageX,
-            'y': event.pageY
+    (function installEventHandlers() {
+        var installHandler = function(element, event, handler) {
+            if (element.addEventListener)
+                element.addEventListener(event, handler, false);
+            else if (element.attachEvent)
+                element.attachEvent('on' + event, handler);
+            else
+                console.log('This browser uses neither addEventListener nor attachEvent');
         };
 
-        if (mouseIsDown) {
-          sendEvent("mousemove", mouseMovePos);
-        } else {
-            restartMouseMoveTimer();
-        }
-
-        event.preventDefault();
-        event.stopPropagation();
-    };
-
-    screen.onmouseup = function(event) {
-        //console.log("Mouse up; pageX: " + event.pageX + ", pageY: " + event.pageY);
-        mouseIsDown = false;
-        sendEvent("mouseup", mouseStateChangeParams(event));
-        event.preventDefault();
-        event.stopPropagation();
-    };
-
-    // Keyboard events
-    /*
-    var recognizeKeyPress = function(event) {  // This code comes from http://unixpapa.com/js/key.html
-        var c = null;
-      
-        if (event.which == null)
-            c = String.fromCharCode(event.keyCode); // old IE
-        else if (event.which != 0 && event.charCode != 0)
-            c = String.fromCharCode(event.which); // All others
-        else
-            ; // Special key
-          
-        return c;
-    };
-        
-    var recognizeKeyDownAndUp = function(event) {
-        var c = null;
-          
-        switch (event.keyCode) {
-            case  32: c = 'space'; break;
-            case  13: c = 'enter'; break;
-            case   9: c = 'tab'; break;
-            case  27: c = 'esc'; break;
-            case   8: c = 'backspace'; break;
-            case  16: c = 'shift'; break;
-            case  17: c = 'control'; break;
-            case  18: c = 'alt'; break;
-            case  20: c = 'capslock'; break;
-            case 144: c = 'numlock'; break;
-            case  37: c = 'leftarrow'; break;
-            case  38: c = 'uparrow'; break;
-            case  39: c = 'rightarrow'; break;
-            case  40: c = 'bottomarrow'; break;
-            case  45: c = 'insert'; break;
-            case  46: c = 'delete'; break;
-            case  36: c = 'home'; break;
-            case  35: c = 'end'; break;
-            case  33: c = 'pageup'; break;
-            case  34: c = 'pagedown'; break;
-            case 112: c = 'f1'; break;
-            case 113: c = 'f2'; break;
-            case 114: c = 'f3'; break;
-            case 115: c = 'f4'; break;
-            case 116: c = 'f5'; break;
-            case 117: c = 'f6'; break;
-            case 118: c = 'f7'; break;
-            case 119: c = 'f8'; break;
-            case 120: c = 'f9'; break;
-            case 121: c = 'f10'; break;
-            case 122: c = 'f11'; break;
-            case 123: c = 'f12'; break;
-            // This key works on Mozilla only
-            case 224: c = 'applecommand'; break;
-            // And these keys also on IE
-            case  91: c = 'leftwindowsstart'; break;
-            case  92: c = 'rightwindowsstart'; break;
-            case  93: c = 'windowsmenu'; break;
-        }
-          
-        return c;
-    };
-        
-    var recognizeSpecialKey = function(event) {
-        if (recognizeKeyPress(event) === null) {
-            var key = recognizeKeyDownAndUp(event);
-            
-            if (key !== null)
-                return key;
-        }
-
-        return null;
-    };
-    */
-
-    /*
-    screen.onkeydown = function(event) {
-        //console.log("Key down; pageX: " + event.pageX + ", pageY: " + event.pageY + ", metaKey: " + event.metaKey);
-          
-        var key = recognizeSpecialKey(event);
-          
-        if (key !== null)
-            sendEvent("keydown");
-    };
-  
-    screen.onkeyup = function(event) {
-        //console.log("Key up; pageX: " + event.pageX + ", pageY: " + event.pageY + ", metaKey: " + event.metaKey);
-          
-        var key = recognizeSpecialKey(event);
-          
-        if (key !== null)
-            sendEvent("keyup");
-    };
-  
-    screen.onkeypress = function(event) {
-        var key = recognizeKeyPress(event);
-            
-        if (key !== null)
-            sendEvent("keypress");
-    };
-    */
+        installHandler(screen, 'mousedown', commonEventHandler);
+        installHandler(screen, 'mousemove', commonEventHandler);
+        installHandler(screen, 'mouseup', commonEventHandler);
+        installHandler(window, 'keydown', commonEventHandler);
+        installHandler(window, 'keypress', commonEventHandler);
+        installHandler(window, 'keyup', commonEventHandler);
+    })();
 })();
