@@ -614,7 +614,7 @@ namespace BlinkingEye
                     break;
 
                 default:
-                    Console.WriteLine("Usage:\tBlinkingEye [address [port [password]]]");
+                    Console.WriteLine("Usage:\tBlinkingEye [[address] port] password");
                     Console.WriteLine();
                     Console.WriteLine("\taddress\t\tIP address to listen on (default: all)");
                     Console.WriteLine("\tport\t\tPort to listen at (default: 3130)");
