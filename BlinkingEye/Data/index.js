@@ -29,6 +29,7 @@
         image.src = document.location + (diff ? 'screen-diff.png' : 'screen.png') + '?ctr=' + ctr;
         image.onload = function () {
             ctr++;
+            initial = false;
             clearTimeout(failSafeTimerId);
             context.drawImage(image, 0, 0);
             callback();
@@ -46,15 +47,18 @@
         var delay = 2000, // All delays in milliseconds
             failSafeDelay = 60000;
 
-        if (initial) {
+        if (initial)
             loadImage(false, reloadImage);
-            initial = false;
-        } else {
+        else {
             setTimeout(function() {
                 loadImage(true, reloadImage);
             }, delay);
         }
 
+        if (failSafeTimerId) {
+            clearTimeout(failSafeTimerId);
+            failSafeTimerId = undefined;
+        }
         failSafeTimerId = setTimeout(failSafeRestartLoading, failSafeDelay);
     };
 
