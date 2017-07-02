@@ -307,7 +307,7 @@ namespace BlinkingEye
                     foreach (string postParam in postData.Split('&'))
                     {
                         string[] kvPair = postParam.Split('=');
-                        postParams.Add(kvPair[0], HttpUtility.UrlDecode(kvPair[1]));
+                        postParams.Add(HttpUtility.UrlDecode(kvPair[0]), HttpUtility.UrlDecode(kvPair[1]));
                     }
 
                     if (postParams.ContainsKey("type")) // We have an event
