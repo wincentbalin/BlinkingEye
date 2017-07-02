@@ -142,19 +142,6 @@
         };
         
         switch (params.type) {
-            case 'keydown':
-            case 'keyup':
-                params.key = event.key;
-                if ('keyCode' in event)
-                    params.keyCode = event.keyCode;
-                else if ('which' in event)
-                    params.keyCode = event.which;
-                else
-                    console.log('This browser uses neither keyCode nor which');
-                eventQueue.push(params);
-                break;
-            case 'keypress':  // Ignore them
-                break;
             case 'mousedown':
                 eventQueue.push(createMouseMoveEventParams(event));
                 mouseIsDown = true;
@@ -170,6 +157,19 @@
             case 'mousemove':
                 updateMouseMovePos(event);
                 restartMouseMoveTimer();
+                break;
+            case 'keydown':
+            case 'keyup':
+                params.key = event.key;
+                if ('keyCode' in event)
+                    params.keyCode = event.keyCode;
+                else if ('which' in event)
+                    params.keyCode = event.which;
+                else
+                    console.log('This browser uses neither keyCode nor which');
+                eventQueue.push(params);
+                break;
+            case 'keypress':  // Ignore them
                 break;
             default:
                 console.log('Unknown event of type', event.type);
