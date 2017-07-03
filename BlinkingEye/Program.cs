@@ -224,7 +224,7 @@ namespace BlinkingEye
             Console.WriteLine("Got keydown event, key: " + p["key"] + ", keyCode: " + p["keyCode"]);
 
             byte keyCode = Convert.ToByte(p["keyCode"]);
-            Win32.keybd_event(keyCode, 0, 0, UIntPtr.Zero);
+            Win32.keybd_event(keyCode, Win32.MapVirtualKey(keyCode, 0), Win32.KEYEVENTF_EXTENDEDKEY, UIntPtr.Zero);
         }
 
         public static void KeyUp(Dictionary<string, string> p)
@@ -235,7 +235,7 @@ namespace BlinkingEye
             Console.WriteLine("Got keyup event, key: " + p["key"] + ", keyCode: " + p["keyCode"]);
 
             byte keyCode = Convert.ToByte(p["keyCode"]);
-            Win32.keybd_event(keyCode, 0, Win32.KEYEVENTF_KEYUP, UIntPtr.Zero);
+            Win32.keybd_event(keyCode, Win32.MapVirtualKey(keyCode, 0), Win32.KEYEVENTF_EXTENDEDKEY | Win32.KEYEVENTF_KEYUP, UIntPtr.Zero);
         }
     };
 
