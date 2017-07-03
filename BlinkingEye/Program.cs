@@ -98,6 +98,9 @@ namespace BlinkingEye
 
         [DllImport("user32.dll")]
         public static extern Byte MapVirtualKey(UInt32 uCode, UInt32 uMapType);
+
+        [DllImport("User32.dll")]
+        public static extern short VkKeyScan(char ch);
     }
 
     static class Event
@@ -223,7 +226,8 @@ namespace BlinkingEye
 
             Console.WriteLine("Got keydown event, key: " + p["key"] + ", keyCode: " + p["keyCode"]);
 
-            byte keyCode = Convert.ToByte(p["keyCode"]);
+            string key = p["key"];
+            byte keyCode = key.Length == 1 ? (byte)Win32.VkKeyScan(key[0]) : Convert.ToByte(p["keyCode"]);
             Win32.keybd_event(keyCode, Win32.MapVirtualKey(keyCode, 0), Win32.KEYEVENTF_EXTENDEDKEY, UIntPtr.Zero);
         }
 
@@ -234,7 +238,8 @@ namespace BlinkingEye
 
             Console.WriteLine("Got keyup event, key: " + p["key"] + ", keyCode: " + p["keyCode"]);
 
-            byte keyCode = Convert.ToByte(p["keyCode"]);
+            string key = p["key"];
+            byte keyCode = key.Length == 1 ? (byte)Win32.VkKeyScan(key[0]) : Convert.ToByte(p["keyCode"]);
             Win32.keybd_event(keyCode, Win32.MapVirtualKey(keyCode, 0), Win32.KEYEVENTF_EXTENDEDKEY | Win32.KEYEVENTF_KEYUP, UIntPtr.Zero);
         }
     };
