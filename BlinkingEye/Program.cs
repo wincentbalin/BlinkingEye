@@ -120,6 +120,21 @@ namespace BlinkingEye
             }
         }
 
+        private static bool debugOutput = false;
+
+        public static bool DebugOutput
+        {
+            get
+            {
+                return debugOutput;
+            }
+            set
+            {
+                if (debugOutput != value)
+                    debugOutput = value;
+            }
+        }
+
         private static Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
 
         public static Rectangle ScreenBounds
@@ -142,7 +157,8 @@ namespace BlinkingEye
             if (!p.ContainsKey("which"))
                 return;
 
-            Console.WriteLine("MouseDown");
+            if (debugOutput)
+                Console.WriteLine("MouseDown");
 
             if (testMode)
                 Win32.SetCursorPos(lastPos.X, lastPos.Y);
@@ -167,7 +183,8 @@ namespace BlinkingEye
             if (!p.ContainsKey("which"))
                 return;
 
-            Console.WriteLine("MouseUp");
+            if (debugOutput)
+                Console.WriteLine("MouseUp");
 
             if (testMode)
                 Win32.SetCursorPos(lastPos.X, lastPos.Y);
@@ -194,7 +211,8 @@ namespace BlinkingEye
 
             int x = Convert.ToInt32(p["x"]) + screenBounds.Left;
             int y = Convert.ToInt32(p["y"]) + screenBounds.Top;
-            Console.WriteLine(string.Format("x: {0}, y: {1}", x, y));
+            if (debugOutput)
+                Console.WriteLine(string.Format("x: {0}, y: {1}", x, y));
 
             if (testMode)
                 lastPos = new Point(x, y);
@@ -224,7 +242,8 @@ namespace BlinkingEye
             if (!p.ContainsKey("keyCode") || !p.ContainsKey("key"))
                 return;
 
-            Console.WriteLine("Got keydown event, key: " + p["key"] + ", keyCode: " + p["keyCode"]);
+            if (debugOutput)
+                Console.WriteLine("Got keydown event, key: " + p["key"] + ", keyCode: " + p["keyCode"]);
 
             string key = p["key"];
             byte keyCode = key.Length == 1 ? (byte)Win32.VkKeyScan(key[0]) : Convert.ToByte(p["keyCode"]);
@@ -236,7 +255,8 @@ namespace BlinkingEye
             if (!p.ContainsKey("keyCode") || !p.ContainsKey("key"))
                 return;
 
-            Console.WriteLine("Got keyup event, key: " + p["key"] + ", keyCode: " + p["keyCode"]);
+            if (debugOutput)
+                Console.WriteLine("Got keyup event, key: " + p["key"] + ", keyCode: " + p["keyCode"]);
 
             string key = p["key"];
             byte keyCode = key.Length == 1 ? (byte)Win32.VkKeyScan(key[0]) : Convert.ToByte(p["keyCode"]);
@@ -269,7 +289,8 @@ namespace BlinkingEye
             server.BeginGetContext(new AsyncCallback(ContextReceivedCallback), null);
 
             // Process request
-            Console.WriteLine("Request for: {0}", context.Request.Url.LocalPath);
+            if (Event.DebugOutput)
+                Console.WriteLine("Request for: {0}", context.Request.Url.LocalPath);
 
             if (context.Request.HttpMethod == "GET") // Output
             {
@@ -315,7 +336,8 @@ namespace BlinkingEye
             }
             else if (context.Request.HttpMethod == "POST") // Input
             {
-                Console.WriteLine("Got a POST!");
+                if (Event.DebugOutput)
+                    Console.WriteLine("Got a POST!");
 
                 // Here mostly from http://stackoverflow.com/questions/5197579/getting-form-data-from-httplistenerrequest
                 if (context.Request.HasEntityBody)
@@ -343,7 +365,7 @@ namespace BlinkingEye
                             case "wheel": Event.Wheel(postParams); break;
                             case "keydown": Event.KeyDown(postParams); break;
                             case "keyup": Event.KeyUp(postParams); break;
-                            default: Console.WriteLine("Unknown event: " + type); break;
+                            default: if (Event.DebugOutput) Console.WriteLine("Unknown event: " + type); break;
                         }
                     }
                 }
@@ -592,6 +614,12 @@ namespace BlinkingEye
         {
             if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "testmode.txt")))
                 Event.TestMode = true;
+        }
+
+        private static void TestForDebugOutput()
+        {
+            if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "debug.txt")))
+                Event.DebugOutput = true;
         }
 
         private static void AddFirewallRule(int serverPort)
