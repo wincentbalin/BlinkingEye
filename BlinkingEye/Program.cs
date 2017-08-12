@@ -103,7 +103,7 @@ namespace BlinkingEye
         public static extern short VkKeyScan(char ch);
     }
 
-    static class Event
+    static class ExecutionModes
     {
         private static bool testMode = false;
 
@@ -134,7 +134,10 @@ namespace BlinkingEye
                     debugOutput = value;
             }
         }
+    }
 
+    static class Event
+    {
         private static Rectangle screenBounds = Screen.PrimaryScreen.Bounds;
 
         public static Rectangle ScreenBounds
@@ -157,10 +160,10 @@ namespace BlinkingEye
             if (!p.ContainsKey("which"))
                 return;
 
-            if (debugOutput)
+            if (ExecutionModes.DebugOutput)
                 Console.WriteLine("MouseDown");
 
-            if (testMode)
+            if (ExecutionModes.TestMode)
                 Win32.SetCursorPos(lastPos.X, lastPos.Y);
 
             int which = Convert.ToInt32(p["which"]);
@@ -183,10 +186,10 @@ namespace BlinkingEye
             if (!p.ContainsKey("which"))
                 return;
 
-            if (debugOutput)
+            if (ExecutionModes.DebugOutput)
                 Console.WriteLine("MouseUp");
 
-            if (testMode)
+            if (ExecutionModes.TestMode)
                 Win32.SetCursorPos(lastPos.X, lastPos.Y);
 
             int which = Convert.ToInt32(p["which"]);
@@ -211,10 +214,10 @@ namespace BlinkingEye
 
             int x = Convert.ToInt32(p["x"]) + screenBounds.Left;
             int y = Convert.ToInt32(p["y"]) + screenBounds.Top;
-            if (debugOutput)
+            if (ExecutionModes.DebugOutput)
                 Console.WriteLine(string.Format("x: {0}, y: {1}", x, y));
 
-            if (testMode)
+            if (ExecutionModes.TestMode)
                 lastPos = new Point(x, y);
             else
                 Win32.SetCursorPos(x, y);
@@ -242,7 +245,7 @@ namespace BlinkingEye
             if (!p.ContainsKey("keyCode") || !p.ContainsKey("key"))
                 return;
 
-            if (debugOutput)
+            if (ExecutionModes.DebugOutput)
                 Console.WriteLine("Got keydown event, key: " + p["key"] + ", keyCode: " + p["keyCode"]);
 
             string key = p["key"];
@@ -255,7 +258,7 @@ namespace BlinkingEye
             if (!p.ContainsKey("keyCode") || !p.ContainsKey("key"))
                 return;
 
-            if (debugOutput)
+            if (ExecutionModes.DebugOutput)
                 Console.WriteLine("Got keyup event, key: " + p["key"] + ", keyCode: " + p["keyCode"]);
 
             string key = p["key"];
@@ -289,7 +292,7 @@ namespace BlinkingEye
             server.BeginGetContext(new AsyncCallback(ContextReceivedCallback), null);
 
             // Process request
-            if (Event.DebugOutput)
+            if (ExecutionModes.DebugOutput)
                 Console.WriteLine("Request for: {0}", context.Request.Url.LocalPath);
 
             if (context.Request.HttpMethod == "GET") // Output
@@ -336,7 +339,7 @@ namespace BlinkingEye
             }
             else if (context.Request.HttpMethod == "POST") // Input
             {
-                if (Event.DebugOutput)
+                if (ExecutionModes.DebugOutput)
                     Console.WriteLine("Got a POST!");
 
                 // Here mostly from http://stackoverflow.com/questions/5197579/getting-form-data-from-httplistenerrequest
@@ -365,7 +368,7 @@ namespace BlinkingEye
                             case "wheel": Event.Wheel(postParams); break;
                             case "keydown": Event.KeyDown(postParams); break;
                             case "keyup": Event.KeyUp(postParams); break;
-                            default: if (Event.DebugOutput) Console.WriteLine("Unknown event: " + type); break;
+                            default: if (ExecutionModes.DebugOutput) Console.WriteLine("Unknown event: " + type); break;
                         }
                     }
                 }
@@ -613,13 +616,13 @@ namespace BlinkingEye
         private static void TestForTestMode()
         {
             if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "testmode.txt")))
-                Event.TestMode = true;
+                ExecutionModes.TestMode = true;
         }
 
         private static void TestForDebugOutput()
         {
             if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "debug.txt")))
-                Event.DebugOutput = true;
+                ExecutionModes.DebugOutput = true;
         }
 
         private static void AddFirewallRule(int serverPort)
