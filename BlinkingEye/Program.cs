@@ -113,11 +113,6 @@ namespace BlinkingEye
             {
                 return testMode;
             }
-            set
-            {
-                if (testMode != value)
-                    testMode = value;
-            }
         }
 
         private static bool debugOutput = false;
@@ -128,11 +123,15 @@ namespace BlinkingEye
             {
                 return debugOutput;
             }
-            set
-            {
-                if (debugOutput != value)
-                    debugOutput = value;
-            }
+        }
+
+        public static void Initialise()
+        {
+            if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "testmode.txt")))
+                testMode = true;
+
+            if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "debug.txt")))
+                debugOutput = true;
         }
     }
 
@@ -613,18 +612,6 @@ namespace BlinkingEye
                 return input;
         }
 
-        private static void TestForTestMode()
-        {
-            if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "testmode.txt")))
-                ExecutionModes.TestMode = true;
-        }
-
-        private static void TestForDebugOutput()
-        {
-            if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "debug.txt")))
-                ExecutionModes.DebugOutput = true;
-        }
-
         private static void AddFirewallRule(int serverPort)
         {
             // From http://blogs.msdn.com/b/securitytools/archive/2009/08/21/automating-windows-firewall-settings-with-c.aspx
@@ -682,13 +669,15 @@ namespace BlinkingEye
                     Console.WriteLine("\taddress\t\tIP address to listen on (default: all)");
                     Console.WriteLine("\tport\t\tPort to listen at (default: 3130)");
                     Console.WriteLine("\tpassword\tPassword for this connexion");
+                    Console.WriteLine();
+                    Console.WriteLine("If file testmode.txt exists, then the program assumes client = server.");
+                    Console.WriteLine("If file debug.txt exists, then the program outputs (a lot of) debug messages.");
                     Environment.Exit(1);
                     break;
             }
 
             SetupScreen(screenNumber);
-            TestPresenceOfPNGOptimizer();
-            TestForTestMode();
+            ExecutionModes.Initialise();
 
             parentPath = "/" + password + "/";
             string serverPrefix = String.Format("http://{0}:{1}/{2}/", address, port, password);
