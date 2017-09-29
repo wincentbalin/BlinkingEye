@@ -55,7 +55,7 @@ These options start **BlinkingEye** with the specified password `xyz1`. The serv
 
 ## License
 
-**BlinkingEye** is available under the ... license. See the [LICENSE](LICENSE.md) file for more info.
+**BlinkingEye** is available under the GNU Public License v2.0. See the [LICENSE](LICENSE) file for more info.
 
 ## Author
 
