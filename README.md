@@ -9,7 +9,7 @@
 
 Optionally:
 
- * PngOptimizerDll.dll (you need to place the 32 bit DLL into the directory with **BlinkingEye** binary.)
+ * [PngOptimizerDll.dll](https://psydk.org/pngoptimizer) (you need to place the 32 bit DLL into the directory with **BlinkingEye** binary.)
 
 ## Features
 
