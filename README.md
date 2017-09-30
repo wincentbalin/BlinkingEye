@@ -1,5 +1,7 @@
 # BlinkingEye
 
+[![license](https://img.shields.io/github/license/mashape/apistatus.svg)]()
+
 [BlinkingEye](https://github.com/wincentbalin/BlinkingEye) is a remote viewer for Windows over low-throughput TCP/IP links.
 
 ## Requirements
