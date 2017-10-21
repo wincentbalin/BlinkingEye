@@ -27,7 +27,7 @@ You may run the **BlinkingEye** binary with the following command line arguments
 BlinkingEye xyz1
 ```
 
-These options start **BlinkingEye** with the specified password `xyz1`. The server listens on all available IP addresses at the port `3130` and captures the screen number `1`. Access using http://IP_ADDRESS:3130/xyz1/ .
+These options start **BlinkingEye** with the specified password `xyz1`. The server listens on all available IP addresses at the port `3130` and captures the screen number `1`. Access using http://ip-address:3130/xyz1/ .
 
 ### Running with port and password
 
@@ -35,7 +35,7 @@ These options start **BlinkingEye** with the specified password `xyz1`. The serv
 BlinkingEye 3131 xyz1
 ```
 
-These options start **BlinkingEye** with the specified password `xyz1`. The server listens on all available IP addresses at the port `3131` and captures the screen number `1`. Access using http://IP_ADDRESS:3131/xyz1/ .
+These options start **BlinkingEye** with the specified password `xyz1`. The server listens on all available IP addresses at the port `3131` and captures the screen number `1`. Access using http://ip-address:3131/xyz1/ .
 
 ### Running with IP address, port and password
 
