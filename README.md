@@ -27,7 +27,7 @@ You may run the **BlinkingEye** binary with the following command line arguments
 BlinkingEye xyz1
 ```
 
-These options start **BlinkingEye** with the specified password `xyz1`. The server listens on all available IP addresses at the port 3130 and captures the screen number 1.
+These options start **BlinkingEye** with the specified password `xyz1`. The server listens on all available IP addresses at the port `3130` and captures the screen number `1`. Access using http://IP_ADDRESS:3130/xyz1/ .
 
 ### Running with port and password
 
@@ -35,7 +35,7 @@ These options start **BlinkingEye** with the specified password `xyz1`. The serv
 BlinkingEye 3131 xyz1
 ```
 
-These options start **BlinkingEye** with the specified password `xyz1`. The server listens on all available IP addresses at the port `3131` and captures the screen number `1`.
+These options start **BlinkingEye** with the specified password `xyz1`. The server listens on all available IP addresses at the port `3131` and captures the screen number `1`. Access using http://IP_ADDRESS:3131/xyz1/ .
 
 ### Running with IP address, port and password
 
@@ -43,7 +43,7 @@ These options start **BlinkingEye** with the specified password `xyz1`. The serv
 BlinkingEye 192.168.2.1 3131 xyz1
 ```
 
-These options start **BlinkingEye** with the specified password `xyz1`. The server listens on the IP address `192.168.2.1` at the port `3131` and captures the screen number `1`.
+These options start **BlinkingEye** with the specified password `xyz1`. The server listens on the IP address `192.168.2.1` at the port `3131` and captures the screen number `1`. Access using http://192.168.2.1:3131/xyz1/ .
 
 ### Running with screen number IP address, port and password
 
@@ -51,7 +51,7 @@ These options start **BlinkingEye** with the specified password `xyz1`. The serv
 BlinkingEye 2 192.168.2.1 3131 xyz1
 ```
 
-These options start **BlinkingEye** with the specified password `xyz1`. The server listens on the IP address `192.168.2.1` at the port `3131` and captures the screen number `2`.
+These options start **BlinkingEye** with the specified password `xyz1`. The server listens on the IP address `192.168.2.1` at the port `3131` and captures the screen number `2`. Access using http://192.168.2.1:3131/xyz1/ .
 
 ## License
 
